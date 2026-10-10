@@ -6,29 +6,35 @@
   <title>Hostel and Mess Management System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-  <!-- Corporate Header -->
+  <!-- Neo-Brutalist Header -->
   <header class="app-header">
     <div class="header-container">
       <div class="brand">
+        <div class="brand-logo-badge">HM</div>
         <div class="brand-text">
-          <span class="brand-title">Hostel & Mess Management System</span>
-          <span class="brand-subtitle">Database Management System • Administration Portal</span>
+          <span class="brand-title">HOSTEL & MESS</span>
         </div>
       </div>
 
-      <nav class="nav-links">
-        <button class="nav-btn active" data-tab="tab-dashboard" id="btn-tab-dashboard">Overview</button>
-        <button class="nav-btn" data-tab="tab-students" id="btn-tab-students">Students</button>
-        <button class="nav-btn" data-tab="tab-rooms" id="btn-tab-rooms">Rooms & Allocations</button>
-        <button class="nav-btn" data-tab="tab-mess" id="btn-tab-mess">Mess & Dining</button>
-        <button class="nav-btn" data-tab="tab-complaints" id="btn-tab-complaints">Grievances</button>
-        <button class="nav-btn" data-tab="tab-queries" id="btn-tab-queries">PL/SQL Queries</button>
-      </nav>
+      <div class="header-right">
+        <nav class="nav-links">
+          <button class="nav-btn active" data-tab="tab-dashboard" id="btn-tab-dashboard">Overview</button>
+          <button class="nav-btn" data-tab="tab-students" id="btn-tab-students">Students</button>
+          <button class="nav-btn" data-tab="tab-rooms" id="btn-tab-rooms">Rooms & Allocations</button>
+          <button class="nav-btn" data-tab="tab-mess" id="btn-tab-mess">Mess & Dining</button>
+          <button class="nav-btn" data-tab="tab-complaints" id="btn-tab-complaints">Grievances</button>
+          <button class="nav-btn" data-tab="tab-queries" id="btn-tab-queries">PL/SQL Queries</button>
+        </nav>
+        <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark / Light Mode" aria-label="Toggle theme">
+          <span class="theme-icon" id="theme-icon">🌙</span>
+          <span class="theme-label" id="theme-label">Dark</span>
+        </button>
+      </div>
     </div>
   </header>
 

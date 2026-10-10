@@ -23,6 +23,7 @@ let state = {
 
 // Initializer
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
   setupNavigation();
   initApplication();
 });
@@ -929,3 +930,37 @@ function showToast(message, type = 'info') {
     toast.remove();
   }, 4000);
 }
+
+// ==============================================================================
+// 8. THEME TOGGLE ENGINE (DARK & LIGHT MODE)
+// ==============================================================================
+
+function initThemeToggle() {
+  const savedTheme = localStorage.getItem('app-theme') || 
+    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(savedTheme);
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(newTheme);
+  localStorage.setItem('app-theme', newTheme);
+  showToast(`Switched to ${newTheme.toUpperCase()} mode`, 'info');
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const icon = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  if (icon && label) {
+    if (theme === 'dark') {
+      icon.textContent = '☀️';
+      label.textContent = 'Light';
+    } else {
+      icon.textContent = '🌙';
+      label.textContent = 'Dark';
+    }
+  }
+}
+
