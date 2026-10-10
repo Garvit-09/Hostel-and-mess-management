@@ -1,7 +1,7 @@
 # 🏫 Hostel & Mess Management System (DA2 Database Implementation)
 
-**Student Name:** Garvit Kaushik  
-**Registration Number:** 25BCE5689  
+**Student Name:** Garvit Kaushik, Arnav Jain, Mridul Gupta
+**Registration Number:** 25BCE5689, 25BCE5504, 25BCE5636  
 **Course:** Database Management Systems (DA2)  
 **Database Engines Supported:** MySQL 8.0+ / High-Fidelity Local Engine  
 
