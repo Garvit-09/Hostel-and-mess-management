@@ -36,8 +36,16 @@ app.get('/api/status', (req, res) => {
 const frontendDir = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendDir));
 
-// Fallback to index.html for single-page routing
+// Explicit portal routes
+app.get(['/app', '/portal'], (req, res) => {
+  res.sendFile(path.join(frontendDir, 'portal.html'));
+});
+
+// Fallback to index.html for landing page
 app.get('*', (req, res) => {
+  if (req.path.startsWith('/app') || req.path.startsWith('/portal')) {
+    return res.sendFile(path.join(frontendDir, 'portal.html'));
+  }
   res.sendFile(path.join(frontendDir, 'index.html'));
 });
 
