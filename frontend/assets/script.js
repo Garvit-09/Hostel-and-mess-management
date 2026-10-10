@@ -1,6 +1,5 @@
 // ==============================================================================
 // HOSTEL & MESS MANAGEMENT SYSTEM (DA2) - FRONTEND APPLICATION SCRIPT
-// Student: Garvit Kaushik (25BCE5689)
 // ==============================================================================
 
 const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')

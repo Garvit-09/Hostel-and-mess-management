@@ -7,7 +7,7 @@ const path = require('path');
 // Initial state data representing the fully populated database
 const initialData = {
   students: [
-    { student_id: 1, reg_no: '25BCE5689', full_name: 'Garvit Kaushik', course: 'B.Tech', branch: 'CSE', year_of_study: 2, gender: 'Male', phone_number: '9876543201', email: 'garvit.kaushik@vitstudent.ac.in', parent_name: 'Suresh Kaushik', parent_contact: '9876500001' },
+    { student_id: 1, reg_no: '25BCE1001', full_name: 'Aditya Sen', course: 'B.Tech', branch: 'CSE', year_of_study: 2, gender: 'Male', phone_number: '9876543201', email: 'aditya.sen@vitstudent.ac.in', parent_name: 'Suresh Sen', parent_contact: '9876500001' },
     { student_id: 2, reg_no: '25BCE5124', full_name: 'Aarav Sharma', course: 'B.Tech', branch: 'CSE', year_of_study: 2, gender: 'Male', phone_number: '9876543202', email: 'aarav.sharma@vitstudent.ac.in', parent_name: 'Ramesh Sharma', parent_contact: '9876500002' },
     { student_id: 3, reg_no: '24BCE1048', full_name: 'Priya Verma', course: 'B.Tech', branch: 'ECE', year_of_study: 3, gender: 'Female', phone_number: '9876543203', email: 'priya.verma@vitstudent.ac.in', parent_name: 'Suman Verma', parent_contact: '9876500003' },
     { student_id: 4, reg_no: '25BCE5783', full_name: 'Rohan Gupta', course: 'B.Tech', branch: 'ME', year_of_study: 2, gender: 'Male', phone_number: '9876543204', email: 'rohan.gupta@vitstudent.ac.in', parent_name: 'Dinesh Gupta', parent_contact: '9876500004' },

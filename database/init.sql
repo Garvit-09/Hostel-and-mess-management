@@ -542,7 +542,7 @@ DELIMITER ;
 
 -- Insert Students (Including Garvit Kaushik 25BCE5689 & Peer batchmates)
 INSERT INTO Student (student_id, reg_no, full_name, course, branch, year_of_study, gender, phone_number, email, parent_name, parent_contact) VALUES
-(1, '25BCE5689', 'Garvit Kaushik', 'B.Tech', 'CSE', 2, 'Male', '9876543201', 'garvit.kaushik@vitstudent.ac.in', 'Suresh Kaushik', '9876500001'),
+(1, '25BCE1001', 'Aditya Sen', 'B.Tech', 'CSE', 2, 'Male', '9876543201', 'aditya.sen@vitstudent.ac.in', 'Suresh Sen', '9876500001'),
 (2, '25BCE5124', 'Aarav Sharma', 'B.Tech', 'CSE', 2, 'Male', '9876543202', 'aarav.sharma@vitstudent.ac.in', 'Ramesh Sharma', '9876500002'),
 (3, '24BCE1048', 'Priya Verma', 'B.Tech', 'ECE', 3, 'Female', '9876543203', 'priya.verma@vitstudent.ac.in', 'Suman Verma', '9876500003'),
 (4, '25BCE5783', 'Rohan Gupta', 'B.Tech', 'ME', 2, 'Male', '9876543204', 'rohan.gupta@vitstudent.ac.in', 'Dinesh Gupta', '9876500004'),
