@@ -1,6 +1,5 @@
 ==============================================================================
 HOSTEL & MESS MANAGEMENT SYSTEM (DA2 DATABASE IMPLEMENTATION)
-Student: Garvit Kaushik (Registration Number: 25BCE5689)
 ==============================================================================
 
 QUICK RUN INSTRUCTIONS:

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/cytoscape.min.js"></script>
 </head>
 <body>
 
@@ -24,6 +25,7 @@
       <div class="header-right">
         <nav class="nav-links">
           <button class="nav-btn active" data-tab="tab-dashboard" id="btn-tab-dashboard">Overview</button>
+          <button class="nav-btn" data-tab="tab-intelligence" id="btn-tab-intelligence">Hostel Intelligence <span class="badge-mini badge-neo4j">Neo4j</span></button>
           <button class="nav-btn" data-tab="tab-students" id="btn-tab-students">Students</button>
           <button class="nav-btn" data-tab="tab-rooms" id="btn-tab-rooms">Rooms & Allocations</button>
           <button class="nav-btn" data-tab="tab-mess" id="btn-tab-mess">Mess & Dining</button>
@@ -278,15 +280,32 @@
       <!-- Weekly Menu Explorer -->
       <div class="card">
         <div class="card-header">
-          <h3>Rotational Menu Schedule</h3>
+          <div>
+            <h3>Rotational Menu Schedule</h3>
+            <p class="section-desc" style="margin: 0; font-size: 0.85rem;">Full 7-day rotational menu across Breakfast, Lunch, Snacks, and Dinner.</p>
+          </div>
           <div class="menu-filter">
             <select id="menu-mess-select" onchange="loadMenu()">
               <option value="1">Block A Dining - Veg</option>
               <option value="2">Block A Dining - Non-Veg</option>
+              <option value="3">Block B Dining - Multi-Cuisine</option>
+              <option value="4">Block C Dining - Veg</option>
+              <option value="5">Block D Dining - Non-Veg</option>
             </select>
           </div>
         </div>
         <div class="card-body">
+          <!-- Day Filter Buttons (Monday to Sunday) -->
+          <div class="menu-day-filter-bar" id="menu-day-filter-bar">
+            <button type="button" class="day-filter-btn active" data-day="All" onclick="setMenuDayFilter('All')">All 7 Days</button>
+            <button type="button" class="day-filter-btn" data-day="Monday" onclick="setMenuDayFilter('Monday')">Mon</button>
+            <button type="button" class="day-filter-btn" data-day="Tuesday" onclick="setMenuDayFilter('Tuesday')">Tue</button>
+            <button type="button" class="day-filter-btn" data-day="Wednesday" onclick="setMenuDayFilter('Wednesday')">Wed</button>
+            <button type="button" class="day-filter-btn" data-day="Thursday" onclick="setMenuDayFilter('Thursday')">Thu</button>
+            <button type="button" class="day-filter-btn" data-day="Friday" onclick="setMenuDayFilter('Friday')">Fri</button>
+            <button type="button" class="day-filter-btn" data-day="Saturday" onclick="setMenuDayFilter('Saturday')">Sat</button>
+            <button type="button" class="day-filter-btn" data-day="Sunday" onclick="setMenuDayFilter('Sunday')">Sun</button>
+          </div>
           <div class="menu-items-grid" id="menu-items-grid">
             <p class="loading-state">Select facility to view menu items...</p>
           </div>
@@ -314,6 +333,7 @@
               <th>ID</th>
               <th>Student</th>
               <th>Category</th>
+              <th>Linked Facility</th>
               <th>Issue Type</th>
               <th>Date Filed</th>
               <th>Description</th>
@@ -323,7 +343,7 @@
             </tr>
           </thead>
           <tbody id="complaints-table-body">
-            <tr><td colspan="9" class="loading-state">Loading grievance records...</td></tr>
+            <tr><td colspan="10" class="loading-state">Loading grievance records...</td></tr>
           </tbody>
         </table>
       </div>
@@ -393,6 +413,368 @@
                   <tr><td class="empty-state">Click 'Run Query' to execute query and view live tabular output.</td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 7: HOSTEL INTELLIGENCE (POWERED BY NEO4J) -->
+    <section class="tab-content" id="tab-intelligence">
+      <div class="section-hero intelligence-hero">
+        <div class="hero-content">
+          <div class="hero-badge-row">
+            <span class="badge badge-accent">Graph Intelligence</span>
+            <span class="badge badge-neutral" id="graph-engine-badge">Neo4j Bolt</span>
+            <span class="badge badge-success" id="mysql-engine-badge">MySQL Authoritative</span>
+          </div>
+          <h1>Hostel Intelligence <span class="hero-highlight">Powered by Neo4j</span></h1>
+          <p>Graph-native property traversal module for roommate network discovery, facility grievance hotspot clustering, authoritative vacancy verification, mess supply chains, and interactive graph exploration.</p>
+        </div>
+        <div class="hero-actions intelligence-actions">
+          <button class="btn btn-primary" id="btn-sync-graph" onclick="triggerGraphSync()">
+            <span class="sync-icon">🔄</span> Sync MySQL to Neo4j
+          </button>
+          <span class="sync-timestamp" id="graph-last-sync-time">Live Hybrid Architecture</span>
+        </div>
+      </div>
+
+      <!-- Graph Intelligence Sub-Navigation -->
+      <div class="sub-nav-bar" role="tablist" aria-label="Hostel Intelligence Navigation">
+        <button type="button" class="sub-nav-btn active" role="tab" aria-selected="true" data-subtab="subtab-overview" onclick="switchIntelSubTab('subtab-overview')">Overview & KPIs</button>
+        <button type="button" class="sub-nav-btn" role="tab" aria-selected="false" data-subtab="subtab-roommates" onclick="switchIntelSubTab('subtab-roommates')">Roommate Explorer</button>
+        <button type="button" class="sub-nav-btn" role="tab" aria-selected="false" data-subtab="subtab-hotspots" onclick="switchIntelSubTab('subtab-hotspots')">Grievance Hotspots</button>
+        <button type="button" class="sub-nav-btn" role="tab" aria-selected="false" data-subtab="subtab-vacancy" onclick="switchIntelSubTab('subtab-vacancy')">Smart Vacancy Finder</button>
+        <button type="button" class="sub-nav-btn" role="tab" aria-selected="false" data-subtab="subtab-mess-graph" onclick="switchIntelSubTab('subtab-mess-graph')">Mess Connections</button>
+        <button type="button" class="sub-nav-btn" role="tab" aria-selected="false" data-subtab="subtab-visualizer" onclick="switchIntelSubTab('subtab-visualizer')">Interactive Graph Explorer</button>
+      </div>
+
+      <!-- SUBTAB 1: OVERVIEW & ARCHITECTURE -->
+      <div class="intel-subcontent active" id="subtab-overview">
+        <div class="metrics-grid">
+          <div class="metric-card intel-metric">
+            <div class="metric-data">
+              <span class="metric-label">Students in Graph</span>
+              <span class="metric-value" id="intel-stat-students">--</span>
+            </div>
+            <span class="metric-footnote">Authoritative Synced Profiles</span>
+          </div>
+          <div class="metric-card intel-metric">
+            <div class="metric-data">
+              <span class="metric-label">Rooms in Graph</span>
+              <span class="metric-value" id="intel-stat-rooms">--</span>
+            </div>
+            <span class="metric-footnote">Across 4 Hostels & 5 Blocks</span>
+          </div>
+          <div class="metric-card intel-metric">
+            <div class="metric-data">
+              <span class="metric-label">Active Room Allocations</span>
+              <span class="metric-value" id="intel-stat-allocations">--</span>
+            </div>
+            <span class="metric-footnote">Traversed via :ALLOCATED_TO</span>
+          </div>
+          <div class="metric-card intel-metric">
+            <div class="metric-data">
+              <span class="metric-label">Explicit Facility Grievances</span>
+              <span class="metric-value" id="intel-stat-linked-complaints">--</span>
+            </div>
+            <span class="metric-footnote">Explicit Facility Associations</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid mt-4">
+          <div class="card">
+            <div class="card-header">
+              <h3>Hybrid Architecture Coexistence</h3>
+              <span class="badge badge-accent">Architecture Contract</span>
+            </div>
+            <div class="card-body">
+              <div class="arch-box">
+                <div class="arch-col">
+                  <h4>MySQL 8.0 (Primary Relational)</h4>
+                  <ul>
+                    <li>Authoritative source of truth for students, rooms, and billing.</li>
+                    <li>Guarantees ACID transactions for room bookings and payments.</li>
+                    <li>Enforces referential integrity, foreign keys, and triggers.</li>
+                    <li>Validates vacancy before any room allocation is committed.</li>
+                  </ul>
+                </div>
+                <div class="arch-divider">⇄</div>
+                <div class="arch-col">
+                  <h4>Neo4j (Graph Intelligence)</h4>
+                  <ul>
+                    <li>Stores property graph projection of rooms, messes, and peers.</li>
+                    <li>Rapid multi-hop traversals for roommate relationship networks.</li>
+                    <li>Hotspot aggregation grouping complaints to specific facilities.</li>
+                    <li>Graph hierarchy traversal (Hostel -> Block -> Floor -> Room).</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Grievance Attribution Transparency</h3>
+              <span class="badge badge-neutral">Correctness Rule</span>
+            </div>
+            <div class="card-body">
+              <p class="text-sm">In strict accordance with database project principles, complaints are <strong>only</strong> linked to a facility if explicitly registered in the source record:</p>
+              <div class="stats-pills mt-3">
+                <div class="stat-pill"><span class="label">Explicitly Linked Grievances:</span> <span class="val success" id="intel-linked-count">--</span></div>
+                <div class="stat-pill"><span class="label">General / Campus-wide Grievances:</span> <span class="val" id="intel-unlinked-count">--</span></div>
+              </div>
+              <p class="text-xs text-muted mt-2">Old or campus-wide grievances without a specific room or mess are never arbitrarily assigned, ensuring 100% truthful data representation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB 2: ROOMMATE RELATIONSHIP EXPLORER -->
+      <div class="intel-subcontent" id="subtab-roommates">
+        <div class="filter-bar">
+          <div class="search-box" style="flex: 2;">
+            <select id="roommate-student-select" onchange="handleRoommateStudentChange()">
+              <option value="">-- Select Student to Explore Roommates --</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="searchCurrentRoommates()">Search Roommates</button>
+          <button type="button" class="btn btn-outline" id="btn-toggle-history" onclick="toggleRoommateHistory()">Housing History</button>
+        </div>
+
+        <div class="intel-split-layout">
+          <!-- Left: Current Roommate Cards & Room Specs -->
+          <div class="intel-split-col">
+            <div id="roommate-results-container">
+              <div class="empty-state-card">
+                <p>Select a student from the dropdown above to discover current roommates and active room allotments in the Neo4j graph.</p>
+              </div>
+            </div>
+
+            <div id="roommate-history-container" style="display: none; margin-top: 1.5rem;">
+              <!-- Historical Roommate Overlaps Loaded Here -->
+            </div>
+          </div>
+
+          <!-- Right: Roommate Relationship Graph -->
+          <div class="intel-split-col">
+            <div class="card graph-card" id="roommate-graph-card">
+              <div class="card-header">
+                <div>
+                  <h3 style="margin: 0; font-size: 1.15rem;">Roommate Relationship Graph</h3>
+                  <p class="text-xs text-muted" style="margin-top: 2px;">Peer allocation network & room hierarchy</p>
+                </div>
+                <div class="graph-toolbar-actions">
+                  <button type="button" class="btn btn-sm btn-outline" onclick="roommateCyZoomIn()" title="Zoom In">+</button>
+                  <button type="button" class="btn btn-sm btn-outline" onclick="roommateCyZoomOut()" title="Zoom Out">-</button>
+                  <button type="button" class="btn btn-sm btn-outline" onclick="roommateCyFit()" title="Fit to View">Fit</button>
+                  <button type="button" class="btn btn-sm btn-outline" onclick="roommateCyResetLayout()" title="Reset Layout">Reset</button>
+                </div>
+              </div>
+
+              <!-- Legend -->
+              <div class="graph-legend-bar">
+                <span class="legend-chip"><span class="legend-color-dot dot-selected-student"></span> Target Student</span>
+                <span class="legend-chip"><span class="legend-color-dot dot-roommate"></span> Roommate</span>
+                <span class="legend-chip"><span class="legend-color-dot dot-room"></span> Room</span>
+                <span class="legend-chip"><span class="legend-color-dot dot-floor"></span> Floor</span>
+                <span class="legend-chip"><span class="legend-color-dot dot-block"></span> Block</span>
+                <span class="legend-chip"><span class="legend-color-dot dot-hostel"></span> Hostel</span>
+              </div>
+
+              <div class="graph-canvas-wrapper" style="height: 480px; position: relative;">
+                <div id="roommate-cytoscape-container" style="width: 100%; height: 100%;"></div>
+                <!-- Node Details Panel -->
+                <div id="roommate-node-details" class="graph-floating-inspector" style="display: none;">
+                  <div class="inspector-header">
+                    <span class="badge badge-accent" id="roommate-node-type">Entity</span>
+                    <button type="button" class="btn-close-mini" onclick="closeRoommateInspector()">&times;</button>
+                  </div>
+                  <h4 id="roommate-node-label" style="margin: 6px 0 8px; font-size: 0.95rem;">--</h4>
+                  <div id="roommate-node-props" class="inspector-props text-xs"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB 3: COMPLAINT HOTSPOTS -->
+      <div class="intel-subcontent" id="subtab-hotspots">
+        <div class="filter-bar">
+          <div class="filter-selects">
+            <select id="hotspot-category-filter" onchange="handleHotspotFilterChange()">
+              <option value="All">All Categories</option>
+              <option value="Hostel">Hostel Grievances</option>
+              <option value="Mess">Mess Grievances</option>
+            </select>
+            <select id="hotspot-status-filter" onchange="handleHotspotFilterChange()">
+              <option value="All">All Statuses</option>
+              <option value="Open" selected>Unresolved Only (Pending & In Progress)</option>
+              <option value="Pending">Pending Only</option>
+              <option value="In Progress">In Progress Only</option>
+              <option value="Resolved">Resolved Only</option>
+            </select>
+          </div>
+          <div class="hotspot-summary-pill" id="hotspot-unlinked-pill">
+            <span class="badge badge-neutral">-- Unlinked Campus Grievances</span>
+          </div>
+        </div>
+
+        <!-- NEW: Grievance Hotspot Relationship Graph -->
+        <div class="card graph-card mb-4" id="hotspots-graph-card">
+          <div class="card-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 style="margin: 0; font-size: 1.15rem;">Grievance Hotspot Relationship Graph</h3>
+                <span class="badge badge-danger">High Severity Red Clusters</span>
+              </div>
+              <p class="text-xs text-muted" style="margin-top: 2px;">Multi-hop spatial graph clustering facilities with recurring unresolved grievances</p>
+            </div>
+            <div class="graph-toolbar-actions">
+              <button type="button" class="btn btn-sm btn-outline" onclick="hotspotsCyZoomIn()" title="Zoom In">+</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="hotspotsCyZoomOut()" title="Zoom Out">-</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="hotspotsCyFit()" title="Fit to View">Fit</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="hotspotsCyResetLayout()" title="Reset Layout">Reset</button>
+            </div>
+          </div>
+
+          <!-- Hotspot Intensity & Node Legend -->
+          <div class="graph-legend-bar">
+            <span class="legend-chip"><span class="legend-color-dot dot-hotspot-high"></span> <strong>Critical Hotspot</strong> (Max Unresolved)</span>
+            <span class="legend-chip"><span class="legend-color-dot dot-hotspot-med"></span> <strong>Elevated Hotspot</strong> (2+ Unresolved)</span>
+            <span class="legend-chip"><span class="legend-color-dot dot-hotspot-low"></span> <strong>Moderate Hotspot</strong> (1 Unresolved)</span>
+            <span class="legend-chip"><span class="legend-color-dot dot-hotspot-neutral"></span> Clean / Resolved Only</span>
+            <span class="legend-chip"><span class="legend-color-dot dot-complaint"></span> Grievance Node</span>
+            <span class="legend-chip"><span class="legend-color-dot dot-hostel"></span> Campus Facility / Hostel</span>
+          </div>
+
+          <div class="graph-canvas-wrapper" style="height: 500px; position: relative;">
+            <div id="hotspots-cytoscape-container" style="width: 100%; height: 100%;"></div>
+            <!-- Hotspot Node Inspector -->
+            <div id="hotspots-node-details" class="graph-floating-inspector" style="display: none;">
+              <div class="inspector-header">
+                <span class="badge badge-danger" id="hotspot-node-badge">Hotspot</span>
+                <button type="button" class="btn-close-mini" onclick="closeHotspotInspector()">&times;</button>
+              </div>
+              <h4 id="hotspot-node-name" style="margin: 6px 0 8px; font-size: 0.95rem;">--</h4>
+              <div id="hotspot-node-props" class="inspector-props text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RETAINED: Ranked Hotspots Table -->
+        <div class="table-container mt-3">
+          <table class="data-table" id="hotspots-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Facility Type</th>
+                <th>Facility Name</th>
+                <th>Hostel / Location</th>
+                <th>Unresolved</th>
+                <th>Resolved</th>
+                <th>Total Grievances</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hotspots-table-body">
+              <tr><td colspan="8" class="loading-state">Loading grievance hotspots from Neo4j...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBTAB 4: SMART VACANCY FINDER -->
+      <div class="intel-subcontent" id="subtab-vacancy">
+        <div class="filter-bar">
+          <div class="filter-selects" style="flex-wrap: wrap;">
+            <select id="vacancy-hostel-filter" onchange="filterSmartVacancyRooms()">
+              <option value="">All Hostels</option>
+              <option value="1">Hostel Block A (Boys)</option>
+              <option value="2">Hostel Block B (Boys)</option>
+              <option value="3">Hostel Block C (Girls)</option>
+              <option value="4">Hostel Block D (Girls)</option>
+            </select>
+            <select id="vacancy-actype-filter" onchange="filterSmartVacancyRooms()">
+              <option value="">All AC Types</option>
+              <option value="AC">Air Conditioned (AC)</option>
+              <option value="Non-AC">Non-AC</option>
+            </select>
+            <select id="vacancy-capacity-filter" onchange="filterSmartVacancyRooms()">
+              <option value="">Any Capacity</option>
+              <option value="1">1 Bed</option>
+              <option value="2">2 Beds</option>
+              <option value="3">3 Beds</option>
+              <option value="4">4 Beds</option>
+              <option value="6">6 Beds</option>
+            </select>
+          </div>
+          <div class="validation-note">
+            <span class="badge badge-success">✓ Authoritative Vacancy Verified by MySQL</span>
+          </div>
+        </div>
+
+        <div class="rooms-grid mt-3" id="smart-rooms-grid">
+          <p class="loading-state">Discovering rooms across hostel hierarchy...</p>
+        </div>
+      </div>
+
+      <!-- SUBTAB 5: MESS CONNECTIONS -->
+      <div class="intel-subcontent" id="subtab-mess-graph">
+        <div class="filter-bar">
+          <div class="search-box" style="flex: 2;">
+            <select id="mess-explorer-select" onchange="handleMessExplorerChange()">
+              <option value="">-- Select Dining Facility --</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="mess-connections-container">
+          <div class="empty-state-card">
+            <p>Select a dining facility from the dropdown above to inspect caterer relationships, registered students, and facility-specific grievances in the Neo4j graph.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB 6: INTERACTIVE GRAPH EXPLORER -->
+      <div class="intel-subcontent" id="subtab-visualizer">
+        <div class="graph-toolbar">
+          <div class="toolbar-group">
+            <button class="btn btn-sm btn-outline active" data-gfilter="all" onclick="filterGraphByType('all')">All Nodes</button>
+            <button class="btn btn-sm btn-outline" data-gfilter="Student" onclick="filterGraphByType('Student')">Students</button>
+            <button class="btn btn-sm btn-outline" data-gfilter="Room" onclick="filterGraphByType('Room')">Rooms</button>
+            <button class="btn btn-sm btn-outline" data-gfilter="Hostel" onclick="filterGraphByType('Hostel')">Hostels</button>
+            <button class="btn btn-sm btn-outline" data-gfilter="Mess" onclick="filterGraphByType('Mess')">Messes</button>
+            <button class="btn btn-sm btn-outline" data-gfilter="Caterer" onclick="filterGraphByType('Caterer')">Caterers</button>
+            <button class="btn btn-sm btn-outline" data-gfilter="Complaint" onclick="filterGraphByType('Complaint')">Grievances</button>
+          </div>
+          <div class="toolbar-controls">
+            <button class="btn btn-sm btn-outline" onclick="cyZoomIn()" title="Zoom In">+</button>
+            <button class="btn btn-sm btn-outline" onclick="cyZoomOut()" title="Zoom Out">-</button>
+            <button class="btn btn-sm btn-outline" onclick="cyFit()" title="Fit to Screen">Fit</button>
+            <button class="btn btn-sm btn-outline" onclick="cyResetLayout()" title="Re-run Layout">Layout</button>
+          </div>
+        </div>
+
+        <div class="graph-legend">
+          <span class="legend-item"><span class="legend-color color-student"></span> Student</span>
+          <span class="legend-item"><span class="legend-color color-room"></span> Room</span>
+          <span class="legend-item"><span class="legend-color color-hostel"></span> Hostel</span>
+          <span class="legend-item"><span class="legend-color color-mess"></span> Mess</span>
+          <span class="legend-item"><span class="legend-color color-caterer"></span> Caterer</span>
+          <span class="legend-item"><span class="legend-color color-complaint"></span> Grievance</span>
+        </div>
+
+        <div class="graph-wrapper">
+          <div id="cytoscape-container" class="cytoscape-box"></div>
+          <div id="graph-details-panel" class="graph-details-panel">
+            <div class="panel-header">
+              <h4>Entity Inspector</h4>
+              <button class="btn-close-panel" onclick="closeGraphDetails()">&times;</button>
+            </div>
+            <div id="graph-details-content" class="panel-body">
+              <p class="text-muted">Click any node in the graph visualization to view its detailed properties and connections.</p>
             </div>
           </div>
         </div>
@@ -626,6 +1008,33 @@
           <select id="complaint-type-select" required></select>
         </div>
         <div class="form-group mb-3">
+          <label>Facility Association (Optional)</label>
+          <select id="complaint-facility-type" onchange="toggleComplaintFacilityDropdown()">
+            <option value="none">General / No Specific Facility</option>
+            <option value="room">Room Facility</option>
+            <option value="mess">Mess & Dining Facility</option>
+            <option value="hostel">Hostel Block / Building</option>
+          </select>
+        </div>
+        <div class="form-group mb-3" id="group-complaint-room" style="display: none;">
+          <label>Target Room</label>
+          <select id="complaint-room-select">
+            <option value="">-- Select Room --</option>
+          </select>
+        </div>
+        <div class="form-group mb-3" id="group-complaint-mess" style="display: none;">
+          <label>Target Dining Facility</label>
+          <select id="complaint-mess-select">
+            <option value="">-- Select Mess --</option>
+          </select>
+        </div>
+        <div class="form-group mb-3" id="group-complaint-hostel" style="display: none;">
+          <label>Target Hostel</label>
+          <select id="complaint-hostel-select">
+            <option value="">-- Select Hostel --</option>
+          </select>
+        </div>
+        <div class="form-group mb-3">
           <label>Description</label>
           <textarea id="complaint-description" rows="3" required placeholder="Describe the issue, location, and relevant details..."></textarea>
         </div>
@@ -679,6 +1088,53 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-confirm')">Cancel</button>
         <button type="button" class="btn btn-danger" id="btn-confirm-delete">Delete</button>
+      </div>
+    </div>
+  <!-- Modal: Inspect Facility Complaints (Hotspot Drilldown) -->
+  <div class="modal-backdrop" id="modal-facility-complaints">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3 id="modal-facility-title">Facility Grievance Drilldown</h3>
+        <button class="modal-close" onclick="closeModal('modal-facility-complaints')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="modal-facility-meta" class="mb-3"></div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="modal-facility-complaints-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-facility-complaints')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Graph Synchronization Status -->
+  <div class="modal-backdrop" id="modal-graph-sync">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <h3>Graph Synchronization</h3>
+        <button class="modal-close" onclick="closeModal('modal-graph-sync')">&times;</button>
+      </div>
+      <div class="modal-body text-center" id="sync-modal-body">
+        <div class="spinner-large mb-3" id="sync-spinner"></div>
+        <h4 id="sync-status-title">Synchronizing MySQL to Neo4j...</h4>
+        <p class="text-sm text-muted" id="sync-status-detail">Executing idempotent ETL extraction, building constraints, and updating relationship graph projection.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btn-sync-close" style="display: none;" onclick="closeModal('modal-graph-sync')">Done</button>
       </div>
     </div>
   </div>

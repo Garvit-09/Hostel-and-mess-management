@@ -4,7 +4,7 @@
 
 **Registration Number:** 25BCE5689, 25BCE5504, 25BCE5636  
 **Course:** Database Management Systems (DA2)  
-**Database Engines Supported:** MySQL 8.0+ / High-Fidelity Local Engine  
+**Database Engines Supported:** MySQL 8.0+ / High-Fidelity Engine + **Neo4j 5.x/AuraDB (Graph Intelligence)**  
 
 ---
 
@@ -29,20 +29,31 @@ da2/
 │   │   ├── students.js       # CRUD API for Students
 │   │   ├── rooms.js          # Room inventory & AllocateRoom procedure API
 │   │   ├── mess.js           # Mess subscriptions, payments & menus API
-│   │   ├── complaints.js     # Grievances filing & resolution API
-│   │   └── queries.js        # SQL & PL/SQL Query Console execution engine
+│   │   ├── complaints.js     # Grievances filing & facility association API
+│   │   ├── queries.js        # SQL & PL/SQL Query Console execution engine
+│   │   └── graph.js          # [NEW] Neo4j Graph Intelligence REST API
+│   ├── scripts/
+│   │   ├── setup-neo4j-schema.js # [NEW] Applies 10 uniqueness constraints to Neo4j
+│   │   ├── sync-neo4j.js         # [NEW] Idempotent MySQL-to-Neo4j ETL pipeline
+│   │   └── test-graph.js         # [NEW] Automated 9-point integration test runner
+│   ├── neo4j.js              # [NEW] Managed Neo4j driver, sessions, and safe typing
 │   ├── db.js                 # Dual-mode engine (MySQL 8.0 + High-Fidelity Fallback)
-│   ├── package.json          # Node dependencies (express, cors, mysql2, dotenv)
+│   ├── package.json          # Node dependencies (express, cors, mysql2, neo4j-driver, dotenv)
 │   ├── server.js             # Express web server & static frontend host
-│   └── .env                  # MySQL configuration settings
+│   └── .env                  # MySQL and Neo4j configuration settings
 ├── database/
-│   ├── init.sql              # Complete DDL, 17 tables, triggers, views, stored procedures, sample data
+│   ├── init.sql              # Complete DDL, 17 tables, triggers, views, procedures, sample data
+│   ├── migration_neo4j_facility_complaint.sql # [NEW] Backward-compatible facility foreign keys
+│   ├── neo4j_schema.cypher   # [NEW] Neo4j constraint definitions & Cypher schema
 │   └── queries.sql           # 16 system-specific SQL & PL/SQL queries with explanations
+├── docs/
+│   └── NEO4J_IMPLEMENTATION_REPORT.md # [NEW] Comprehensive 11-section coursework report
 ├── frontend/
 │   ├── assets/
-│   │   ├── style.css         # Modern dark-mode UI design system & glassmorphism
-│   │   └── script.js         # Reactive UI logic, REST API connectors, query console
-│   └── index.html            # Main web application dashboard
+│   │   ├── cytoscape.min.js  # [NEW] Offline vendored Cytoscape.js v3.30.0 graph visualizer
+│   │   ├── style.css         # Modern dark-mode UI design system, glassmorphism & graph styling
+│   │   └── script.js         # Reactive UI logic, REST API connectors, Cytoscape controller
+│   └── portal.html           # Main web application dashboard with Hostel Intelligence tab
 └── run/
     ├── RUN.bat               # Master click-to-run launcher (starts backend & opens browser)
     ├── START_BACKEND.bat     # Launches backend console window for log monitoring
@@ -50,6 +61,61 @@ da2/
     ├── SETUP_MYSQL_DATABASE.bat # Imports init.sql into MySQL Server
     └── README.txt            # Quick guide for evaluators
 ```
+
+---
+
+## 🌐 Hostel Intelligence — Powered by Neo4j
+
+The application features a hybrid architecture combining the ACID transactional strengths of **MySQL 8.0** with the multi-hop relationship traversal powers of **Neo4j Graph Database**.
+
+### 1. The 5 Core Graph Intelligence Features
+1. **Roommate Relationship Explorer:**
+   - Evaluates active living relationships `(Student)-[:ALLOCATED_TO]->(Room)<-[:ALLOCATED_TO]-(Roommate)` in $O(k)$ graph traversal time without recursive SQL joins.
+   - Self-exclusion guarantee: Searched student is never listed as their own roommate.
+   - Includes temporal history analysis detecting overlapping academic terms.
+2. **Grievance Hotspot Detection:**
+   - Aggregates recurring and open complaints grouped by explicit physical facility (`Room`, `Mess`, `Hostel`).
+   - **Truthful Attribution Guarantee:** Unlinked general campus grievances (e.g., campus Wi-Fi) are excluded from facility ranking and transparently reported in an unlinked notice.
+3. **Smart Room & Vacancy Finder (Hybrid Validation):**
+   - Traverses the campus topological hierarchy `(Hostel) -> (Block) -> (Floor) -> (RoomType) -> (Room)`.
+   - **Authoritative Vacancy Rule:** Candidate rooms discovered in the graph are validated against MySQL active allocations (`capacity - current_occupancy > 0`) before rendering to prevent over-allocation.
+4. **Mess & Student Connection Explorer:**
+   - Multi-party exploration linking `(Mess)` to contracted `(Caterer)`, subscribed `(Student)` memberships, and connected dining grievances.
+5. **Interactive Relationship Graph (Cytoscape.js):**
+   - Offline-ready interactive network canvas rendered with **Cytoscape.js v3.30.0** (zero external CDN reliance).
+   - Features physics-based layout, color-coded node taxonomy, interactive 1-hop neighborhood highlighting, pan/zoom controls, and real-time node inspector sidebar.
+
+### 2. Neo4j Environment Configuration
+Create or edit `backend/.env`:
+```env
+# MySQL Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=hostel_mess_management
+PORT=4000
+
+# Neo4j Graph Database Configuration (Local or AuraDB)
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your_neo4j_password
+NEO4J_DATABASE=neo4j
+```
+
+### 3. Neo4j CLI Commands
+From the `backend/` directory:
+- **Set up Schema & Constraints:**
+  ```bash
+  npm run neo4j:schema
+  ```
+- **Run Idempotent ETL Synchronization:**
+  ```bash
+  npm run neo4j:sync
+  ```
+- **Run Graph Integration Test Suite:**
+  ```bash
+  npm run neo4j:test
+  ```
 
 ---
 
@@ -64,7 +130,7 @@ The database `hostel_mess_management` consists of **17 relational tables**:
 6. **Room**: Physical room inventory with dynamic occupancy counters.
 7. **RoomAllocation**: Student room allotments (Active / Vacated).
 8. **ComplaintType**: Categories (Hostel vs Mess) and issue classifications.
-9. **Complaint**: Grievances, resolution tracking, aging, and warden remarks.
+9. **Complaint**: Grievances, resolution tracking, aging, and warden remarks (+ optional facility foreign keys `room_id`, `mess_id`, `hostel_id`).
 10. **Caterer**: Catering vendors and contract terms.
 11. **Mess**: Dining facilities with categories (Veg, Non-Veg, Special Multi-Cuisine).
 12. **MessRegistration**: Active and historical student mess subscriptions.
@@ -127,5 +193,13 @@ The database `hostel_mess_management` consists of **17 relational tables**:
 - **Student CRUD**: Interactive table with real-time search, branch/year filtering, modal forms for **Insert**, **Update**, and **Delete**.
 - **Room Allocations**: Manage room assignments via `AllocateRoom` procedure, vacancy calculations, and one-click vacate updates.
 - **Mess & Dining**: Multi-mess facility viewer, registration switches via `RegisterMess`, fee payment recorder, and rotational menu explorer.
-- **Grievance Desk**: Full lifecycle tracking (Pending -> In Progress -> Resolved), status updates, and deletion.
+- **Grievance Desk**: Full lifecycle tracking (Pending -> In Progress -> Resolved), status updates, linked facility selector, and deletion.
 - **Query Console**: Interactive test runner for all 16 queries showing SQL code, copy button, live execution benchmark (ms), row counts, and formatted tabular output.
+- **Hostel Intelligence [Neo4j]**: 6 sub-tabs featuring Overview, Roommate Explorer, Grievance Hotspots, Smart Vacancy, Mess Connections, and Interactive Cytoscape Graph Explorer.
+
+---
+
+## 📄 Evaluation Documentation
+For in-depth analysis, Cypher query documentation, Mermaid diagrams, and academic comparison:
+👉 Read [`docs/NEO4J_IMPLEMENTATION_REPORT.md`](docs/NEO4J_IMPLEMENTATION_REPORT.md)
+

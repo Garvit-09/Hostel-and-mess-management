@@ -14,6 +14,7 @@ app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/mess', require('./routes/mess'));
 app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/queries', require('./routes/queries'));
+app.use('/api/graph', require('./routes/graph'));
 
 // Status / Health check endpoint
 app.get('/api/status', (req, res) => {

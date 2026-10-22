@@ -4,7 +4,6 @@ color 0B
 
 echo ==============================================================================
 echo       HOSTEL & MESS MANAGEMENT SYSTEM (DA2 IMPLEMENTATION)
-echo       Student: Garvit Kaushik (25BCE5689)
 echo ==============================================================================
 echo.
 echo [1/3] Checking environment & Node.js runtime...

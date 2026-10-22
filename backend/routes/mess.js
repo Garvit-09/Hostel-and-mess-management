@@ -146,32 +146,51 @@ router.get('/payments', async (_, res) => {
   }
 });
 
-// Get weekly menu for a mess
+// Get weekly menu for a mess (all 7 days or filtered by day)
 router.get('/menu/:messId/:weekStart', async (req, res) => {
   const { messId } = req.params;
+  const { day } = req.query;
+  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const mealOrder = ['Breakfast', 'Lunch', 'Snacks', 'Dinner'];
+
   try {
     if (pool.getRawData) {
       const data = pool.getRawData();
-      const rows = data.messMenus
-        .filter(m => m.mess_id === Number(messId))
-        .map(m => ({
-          day_of_week: m.day_of_week,
-          meal_type: m.meal_type,
-          items: m.items.join(', ')
-        }));
-      return res.json(rows);
+      let rows = data.messMenus.filter(m => m.mess_id === Number(messId));
+      if (day && day !== 'All') {
+        rows = rows.filter(m => m.day_of_week.toLowerCase() === day.toLowerCase());
+      }
+      rows.sort((a, b) => {
+        const d = dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
+        if (d !== 0) return d;
+        return mealOrder.indexOf(a.meal_type) - mealOrder.indexOf(b.meal_type);
+      });
+      const formatted = rows.map(m => ({
+        day_of_week: m.day_of_week,
+        meal_type: m.meal_type,
+        items: Array.isArray(m.items) ? m.items.join(', ') : m.items
+      }));
+      return res.json(formatted);
     }
-    const [rows] = await pool.execute(
-      `SELECT mm.day_of_week,
-              mm.meal_type,
-              GROUP_CONCAT(mi.item_name SEPARATOR ', ') AS items
-       FROM MessMenu mm
-       JOIN MenuItem mi ON mi.menu_id = mm.menu_id
-       WHERE mm.mess_id = ?
-       GROUP BY mm.menu_id, mm.day_of_week, mm.meal_type
-       ORDER BY FIELD(mm.day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), mm.meal_type`,
-      [messId]
-    );
+
+    let sql = `SELECT mm.day_of_week,
+                      mm.meal_type,
+                      GROUP_CONCAT(mi.item_name SEPARATOR ', ') AS items
+               FROM MessMenu mm
+               JOIN MenuItem mi ON mi.menu_id = mm.menu_id
+               WHERE mm.mess_id = ?`;
+    const params = [messId];
+
+    if (day && day !== 'All') {
+      sql += ` AND mm.day_of_week = ?`;
+      params.push(day);
+    }
+
+    sql += ` GROUP BY mm.menu_id, mm.day_of_week, mm.meal_type
+             ORDER BY FIELD(mm.day_of_week,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'),
+                      FIELD(mm.meal_type,'Breakfast','Lunch','Snacks','Dinner')`;
+
+    const [rows] = await pool.execute(sql, params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

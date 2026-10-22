@@ -1,6 +1,5 @@
 -- ==============================================================================
 -- HOSTEL & MESS MANAGEMENT SYSTEM (DA2 DATABASE QUERIES & PL/SQL EXECUTION)
--- Student: Garvit Kaushik (Reg No: 25BCE5689)
 -- Contains: Advanced SQL (Joins, Subqueries, Aggregations, Window Functions, Views)
 --           and PL/SQL Stored Routines (Stored Functions & Procedures)
 -- ==============================================================================

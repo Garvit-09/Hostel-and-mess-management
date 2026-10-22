@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// List all complaints with student and category info
+// List all complaints with student, category, and optional facility info
 router.get('/', async (_, res) => {
   try {
     const [rows] = await pool.query(`
@@ -16,10 +16,31 @@ router.get('/', async (_, res) => {
              c.description,
              c.status,
              c.resolved_date,
-             c.remarks
+             c.remarks,
+             c.room_id,
+             c.mess_id,
+             c.hostel_id,
+             r.room_number,
+             m.mess_name,
+             h.hostel_name,
+             CASE
+               WHEN c.room_id IS NOT NULL THEN 'Room'
+               WHEN c.mess_id IS NOT NULL THEN 'Mess'
+               WHEN c.hostel_id IS NOT NULL THEN 'Hostel'
+               ELSE 'General'
+             END AS facility_type,
+             CASE
+               WHEN c.room_id IS NOT NULL THEN CONCAT('Room ', r.room_number)
+               WHEN c.mess_id IS NOT NULL THEN m.mess_name
+               WHEN c.hostel_id IS NOT NULL THEN h.hostel_name
+               ELSE 'General / Campus-wide'
+             END AS facility_name
       FROM Complaint c
       JOIN Student s ON s.student_id = c.student_id
       JOIN ComplaintType ct ON ct.complaint_type_id = c.complaint_type_id
+      LEFT JOIN Room r ON r.room_id = c.room_id
+      LEFT JOIN Mess m ON m.mess_id = c.mess_id
+      LEFT JOIN Hostel h ON h.hostel_id = c.hostel_id
       ORDER BY c.complaint_id DESC`);
     res.json(rows);
   } catch (err) {
@@ -37,16 +58,27 @@ router.get('/types', async (_, res) => {
   }
 });
 
-// File a new complaint (Insert)
+// File a new complaint with optional explicit facility association
 router.post('/', async (req, res) => {
-  const { student_id, complaint_type_id, description } = req.body;
+  const { student_id, complaint_type_id, description, room_id, mess_id, hostel_id } = req.body;
   if (!student_id || !complaint_type_id || !description) {
     return res.status(400).json({ error: 'student_id, complaint_type_id, and description are required' });
   }
+
+  // Enforce at application level that at most one facility is associated
+  const facilities = [room_id, mess_id, hostel_id].filter(f => f !== undefined && f !== null && f !== '');
+  if (facilities.length > 1) {
+    return res.status(400).json({ error: 'A complaint can be explicitly associated with at most one specific facility (Room, Mess, or Hostel).' });
+  }
+
+  const rId = room_id ? Number(room_id) : null;
+  const mId = mess_id ? Number(mess_id) : null;
+  const hId = hostel_id ? Number(hostel_id) : null;
+
   try {
     const [result] = await pool.execute(
-      `INSERT INTO Complaint (student_id, complaint_type_id, description, status) VALUES (?, ?, ?, 'Pending')`,
-      [Number(student_id), Number(complaint_type_id), description]
+      `INSERT INTO Complaint (student_id, complaint_type_id, description, status, room_id, mess_id, hostel_id) VALUES (?, ?, ?, 'Pending', ?, ?, ?)`,
+      [Number(student_id), Number(complaint_type_id), description, rId, mId, hId]
     );
     res.json({ success: true, insertedId: result.insertId, message: 'Complaint registered successfully' });
   } catch (err) {

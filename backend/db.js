@@ -115,13 +115,13 @@ const initialData = {
     { complaint_type_id: 8, type_name: 'Late Meal Serving', category: 'Mess' }
   ],
   complaints: [
-    { complaint_id: 1, student_id: 1, complaint_type_id: 4, complaint_date: '2026-10-07', description: 'AC thermostat in room G01 not cooling below 26C.', status: 'In Progress', resolved_date: null, remarks: 'Technician assigned from facilities team.' },
-    { complaint_id: 2, student_id: 2, complaint_type_id: 2, complaint_date: '2026-10-06', description: 'Bathroom faucet leaking in washroom near G01.', status: 'Resolved', resolved_date: '2026-10-08', remarks: 'Washer replaced by plumber Ramesh.' },
-    { complaint_id: 3, student_id: 4, complaint_type_id: 1, complaint_date: '2026-10-08', description: 'Study table light socket has loose contact.', status: 'Pending', resolved_date: null, remarks: null },
-    { complaint_id: 4, student_id: 5, complaint_type_id: 5, complaint_date: '2026-10-05', description: 'Rice was undercooked during dinner service on Sunday.', status: 'Resolved', resolved_date: '2026-10-06', remarks: 'Caterer supervisor notified and replaced batch.' },
-    { complaint_id: 5, student_id: 7, complaint_type_id: 7, complaint_date: '2026-10-07', description: 'Cold water dispenser on 1st floor running warm.', status: 'Pending', resolved_date: null, remarks: null },
-    { complaint_id: 6, student_id: 8, complaint_type_id: 3, complaint_date: '2026-10-09', description: 'Cupboard latch broken in room 102.', status: 'In Progress', resolved_date: null, remarks: 'Carpenter scheduled for inspection.' },
-    { complaint_id: 7, student_id: 10, complaint_type_id: 6, complaint_date: '2026-10-08', description: 'Dining tables not cleaned between lunch batches.', status: 'Pending', resolved_date: null, remarks: null }
+    { complaint_id: 1, student_id: 1, complaint_type_id: 4, complaint_date: '2026-10-07', description: 'AC thermostat in room G01 not cooling below 26C.', status: 'In Progress', resolved_date: null, remarks: 'Technician assigned from facilities team.', room_id: 1, mess_id: null, hostel_id: null },
+    { complaint_id: 2, student_id: 2, complaint_type_id: 2, complaint_date: '2026-10-06', description: 'Bathroom faucet leaking in washroom near G01.', status: 'Resolved', resolved_date: '2026-10-08', remarks: 'Washer replaced by plumber Ramesh.', room_id: null, mess_id: null, hostel_id: 1 },
+    { complaint_id: 3, student_id: 4, complaint_type_id: 1, complaint_date: '2026-10-08', description: 'Study table light socket has loose contact.', status: 'Pending', resolved_date: null, remarks: null, room_id: null, mess_id: null, hostel_id: null },
+    { complaint_id: 4, student_id: 5, complaint_type_id: 5, complaint_date: '2026-10-05', description: 'Rice was undercooked during dinner service on Sunday.', status: 'Resolved', resolved_date: '2026-10-06', remarks: 'Caterer supervisor notified and replaced batch.', room_id: null, mess_id: 2, hostel_id: null },
+    { complaint_id: 5, student_id: 7, complaint_type_id: 7, complaint_date: '2026-10-07', description: 'Cold water dispenser on 1st floor running warm.', status: 'Pending', resolved_date: null, remarks: null, room_id: null, mess_id: null, hostel_id: null },
+    { complaint_id: 6, student_id: 8, complaint_type_id: 3, complaint_date: '2026-10-09', description: 'Cupboard latch broken in room 102.', status: 'In Progress', resolved_date: null, remarks: 'Carpenter scheduled for inspection.', room_id: 4, mess_id: null, hostel_id: null },
+    { complaint_id: 7, student_id: 10, complaint_type_id: 6, complaint_date: '2026-10-08', description: 'Dining tables not cleaned between lunch batches.', status: 'Pending', resolved_date: null, remarks: null, room_id: null, mess_id: 3, hostel_id: null }
   ],
   messFeePayments: [
     { mess_payment_id: 1, mess_reg_id: 1, payment_date: '2026-09-02', amount_paid: 6200.00, payment_month: '2026-09', payment_mode: 'Online' },
@@ -147,18 +147,185 @@ const initialData = {
     { feedback_id: 7, student_id: 10, mess_id: 3, feedback_date: '2026-10-08', rating: 4, comments: 'North Indian paneer dishes are top tier.' }
   ],
   messMenus: [
+    // --- MESS 1: Block A Dining - Veg (Monday to Sunday, all 4 meal slots) ---
     { menu_id: 1, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Breakfast', items: ['Idli & Medu Vada', 'Coconut Chutney & Sambar', 'Filter Coffee / Tea'] },
     { menu_id: 2, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Lunch', items: ['Steamed Rice & Dal Tadka', 'Paneer Butter Masala', 'Chapati & Salad', 'Curd & Pickle'] },
     { menu_id: 3, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Snacks', items: ['Veg Samosa & Mint Chutney', 'Hot Ginger Tea'] },
     { menu_id: 4, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Dinner', items: ['Tawa Roti & Dal Makhani', 'Jeera Rice & Aloo Gobi', 'Gulab Jamun'] },
-    { menu_id: 5, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Breakfast', items: ['Masala Dosa with Sambar'] },
-    { menu_id: 6, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Lunch', items: ['South Indian Meals with Rasam'] },
-    { menu_id: 7, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Lunch', items: ['Chole Bhature & Boondi Raita'] },
-    { menu_id: 8, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Dinner', items: ['Special Shahi Paneer & Pulao'] },
-    { menu_id: 9, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Breakfast', items: ['Egg Bhurji / Boiled Eggs & Toast'] },
-    { menu_id: 10, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Lunch', items: ['Chicken Curry & Steamed Rice'] },
-    { menu_id: 11, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Dinner', items: ['Chicken Biryani & Onion Raita'] },
-    { menu_id: 12, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Dinner', items: ['Butter Chicken & Butter Naan'] }
+
+    { menu_id: 5, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Breakfast', items: ['Crispy Masala Dosa', 'Potato Masala', 'Coconut Chutney & Sambar', 'Filter Coffee'] },
+    { menu_id: 6, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Lunch', items: ['South Indian Meals', 'Steamed Rice & Drumstick Sambar', 'Tomato Rasam', 'Appalam & Curd'] },
+    { menu_id: 7, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Snacks', items: ['Pav Bhaji with Butter Pav', 'Hot Masala Tea'] },
+    { menu_id: 8, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Dinner', items: ['Phulka & Paneer Do Pyaza', 'Veg Pulao & Mix Dal Tadka', 'Moong Dal Halwa'] },
+
+    { menu_id: 9, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Breakfast', items: ['Poha with Roasted Peanuts & Sev', 'Steamed Sprouts', 'Hot Tea / Coffee'] },
+    { menu_id: 10, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Lunch', items: ['Chole Bhature', 'Jeera Rice', 'Boondi Raita', 'Onion-Lemon Salad'] },
+    { menu_id: 11, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Snacks', items: ['Onion & Mirchi Pakora', 'Sweet Tamarind Chutney', 'Masala Chai'] },
+    { menu_id: 12, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Dinner', items: ['Palak Paneer & Phulka', 'Dal Fry', 'Steamed Basmati Rice', 'Rasgulla'] },
+
+    { menu_id: 13, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Breakfast', items: ['Aloo Paratha with Fresh Curd', 'Mixed Pickle & Butter', 'Masala Tea'] },
+    { menu_id: 14, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Lunch', items: ['Steamed Basmati Rice', 'Gujarati Kadhai Dal', 'Bhindi Masala', 'Chapati & Salad'] },
+    { menu_id: 15, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Snacks', items: ['White Dhokla with Green Chilli Tadka', 'Mint Chutney', 'Tea'] },
+    { menu_id: 16, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Dinner', items: ['Kadai Paneer & Butter Tandoori Roti', 'Kashmiri Pulao', 'Dal Tadka', 'Gajar Ka Halwa'] },
+
+    { menu_id: 17, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Breakfast', items: ['Onion Tomato Uttapam', 'Coconut & Tomato Chutney', 'Sambar', 'Filter Coffee'] },
+    { menu_id: 18, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Lunch', items: ['Rajma Masala & Steamed Basmati Rice', 'Aloo Jeera', 'Chapati', 'Mixed Veg Raita'] },
+    { menu_id: 19, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Snacks', items: ['Bhel Puri & Sev Puri', 'Cardamom Chai'] },
+    { menu_id: 20, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Dinner', items: ['Malai Kofta & Soft Naan', 'Peas Pulao', 'Dal Makhani', 'Rice Kheer'] },
+
+    { menu_id: 21, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Breakfast', items: ['Poori with Aloo Bhaji', 'Suji Halwa', 'Hot Tea / Coffee'] },
+    { menu_id: 22, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Lunch', items: ['Dal Khichdi with Desi Ghee', 'Baingan Bharta', 'Roasted Papad', 'Curd & Pickle'] },
+    { menu_id: 23, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Snacks', items: ['Crispy Veg Cutlet', 'Tomato Sauce & Green Dip', 'Hot Tea'] },
+    { menu_id: 24, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Dinner', items: ['Paneer Tikka Masala', 'Tawa Paratha', 'Veg Fried Rice & Manchurian', 'Vanilla Ice Cream'] },
+
+    { menu_id: 25, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Breakfast', items: ['Rava Upma & Medu Vada', 'Coconut Chutney', 'Fresh Cut Fruits', 'Hot Filter Coffee'] },
+    { menu_id: 26, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Lunch', items: ['Royal Sunday Veg Feast', 'Paneer Lababdar', 'Dal Bukhara', 'Butter Naan', 'Kashmiri Pulao', 'Sweet Boondi'] },
+    { menu_id: 27, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Snacks', items: ['Grilled Cheese & Corn Sandwich', 'Cold Coffee / Masala Chai'] },
+    { menu_id: 28, mess_id: 1, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Dinner', items: ['Special Shahi Paneer & Pulao', 'Tawa Roti', 'Yellow Moong Dal', 'Angoori Gulab Jamun'] },
+
+    // --- MESS 2: Block A Dining - Non-Veg (Monday to Sunday, all 4 meal slots) ---
+    { menu_id: 29, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Breakfast', items: ['Egg Bhurji / Boiled Eggs & Toast', 'Butter & Jam', 'Hot Tea / Coffee'] },
+    { menu_id: 30, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Lunch', items: ['Homestyle Chicken Curry & Steamed Rice', 'Yellow Dal', 'Chapati', 'Green Salad'] },
+    { menu_id: 31, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Snacks', items: ['Chicken Puff & Veg Puff', 'Masala Chai'] },
+    { menu_id: 32, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Dinner', items: ['Hyderabadi Chicken Biryani', 'Mirchi Ka Salan', 'Onion Raita', 'Double Ka Meetha'] },
+
+    { menu_id: 33, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Breakfast', items: ['Masala Egg Omelette with Butter Bread', 'Banana & Apple', 'Tea / Coffee'] },
+    { menu_id: 34, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Lunch', items: ['Fish Curry (Rohu) & Steamed Rice', 'Cabbage Poriyal', 'Tomato Rasam', 'Curd'] },
+    { menu_id: 35, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Snacks', items: ['Egg Kathi Roll', 'Green Mint Chutney', 'Lemon Tea'] },
+    { menu_id: 36, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Dinner', items: ['Tawa Chicken Masala & Phulka', 'Jeera Rice', 'Dal Tadka', 'Fruit Custard'] },
+
+    { menu_id: 37, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Breakfast', items: ['Keema Pav / Boiled Eggs with Hash Browns', 'Filter Coffee / Tea'] },
+    { menu_id: 38, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Lunch', items: ['Chettinad Chicken Masala & Steamed Rice', 'Rasam', 'Chapati', 'Curd & Papad'] },
+    { menu_id: 39, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Snacks', items: ['Crispy Chicken Nuggets & Veg Cutlets', 'Ginger Tea'] },
+    { menu_id: 40, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Dinner', items: ['Butter Chicken & Butter Naan', 'Peas Pulao', 'Dal Makhani', 'Gulab Jamun'] },
+
+    { menu_id: 41, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Breakfast', items: ['French Toast / Fried Eggs with Grilled Tomatoes', 'Butter Toast', 'Coffee / Tea'] },
+    { menu_id: 42, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Lunch', items: ['Egg Curry with Steamed Rice', 'Mixed Vegetable Sauté', 'Chapati', 'Buttermilk'] },
+    { menu_id: 43, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Snacks', items: ['Chicken Keema Samosa', 'Mint Chutney', 'Hot Masala Chai'] },
+    { menu_id: 44, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Dinner', items: ['Kadai Chicken & Butter Tandoori Roti', 'Jeera Rice', 'Yellow Dal', 'Gajar Halwa'] },
+
+    { menu_id: 45, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Breakfast', items: ['Poori with Egg Bhurji / Aloo Curry', 'Hot Tea / Coffee'] },
+    { menu_id: 46, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Lunch', items: ['Mangalorean Kori Gassi & Steamed Rice', 'Dal Fry', 'Solkadhi'] },
+    { menu_id: 47, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Snacks', items: ['Chicken Shawarma Roll', 'Garlic Mayo', 'Mint Lemonade'] },
+    { menu_id: 48, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Dinner', items: ['Thalassery Chicken Dum Biryani', 'Boondi Raita', 'Roasted Papad', 'Semiya Payasam'] },
+
+    { menu_id: 49, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Breakfast', items: ['Cheese Omelette with Brown Bread Toast', 'Fresh Cut Fruits', 'Tea / Coffee'] },
+    { menu_id: 50, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Lunch', items: ['Andhra Spicy Chicken Roast & Steamed Rice', 'Tomato Pappu (Dal)', 'Curd & Pickle'] },
+    { menu_id: 51, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Snacks', items: ['Chicken 65 / Paneer 65', 'Hot Masala Tea'] },
+    { menu_id: 52, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Dinner', items: ['Chicken Tikka Butter Masala', 'Garlic Naan', 'Veg Fried Rice', 'Vanilla Ice Cream'] },
+
+    { menu_id: 53, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Breakfast', items: ['Sunday Special Masala Dosa with Boiled Eggs', 'Chicken Sausage', 'Sambar', 'Filter Coffee'] },
+    { menu_id: 54, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Lunch', items: ['Grand Mutton Biryani / Chicken Sukka', 'Malabar Parotta', 'Rasam', 'Curd Rice', 'Kheer'] },
+    { menu_id: 55, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Snacks', items: ['Grilled Chicken Club Sandwich', 'Cold Coffee / Tea'] },
+    { menu_id: 56, mess_id: 2, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Dinner', items: ['Murgh Handi & Rumali Roti', 'Kashmiri Pulao', 'Dal Bukhara', 'Shahi Tukda'] },
+
+    // --- MESS 3: Block B Dining - Multi-Cuisine (Monday to Sunday, all 4 meal slots) ---
+    { menu_id: 57, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Breakfast', items: ['Paneer Paratha with White Butter', 'Fruit Yogurt', 'Green Tea / Cappuccino'] },
+    { menu_id: 58, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Lunch', items: ['Paneer Butter Masala & Dal Makhani', 'Garlic Naan', 'Jeera Rice', 'Salad Bar'] },
+    { menu_id: 59, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Snacks', items: ['Veg Spring Rolls & Dim Sum', 'Sweet Chilli Dip', 'Masala Chai'] },
+    { menu_id: 60, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Dinner', items: ['Tandoori Roti', 'Chicken Tikka / Paneer Tikka Gravy', 'Pulao', 'Walnut Brownie with Ice Cream'] },
+
+    { menu_id: 61, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Breakfast', items: ['Belgian Waffles & Pancakes with Honey', 'Scrambled Eggs / Hash Browns', 'Coffee'] },
+    { menu_id: 62, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Lunch', items: ['Hakka Noodles', 'Chilli Chicken / Chilli Paneer Gravy', 'Fried Rice', 'Kimchi Salad'] },
+    { menu_id: 63, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Snacks', items: ['Crispy Peri Peri Fries & Nachos with Cheese Dip', 'Cold Coffee'] },
+    { menu_id: 64, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Dinner', items: ['Dal Bukhara & Butter Kulcha', 'Methi Malai Matar', 'Steamed Basmati Rice', 'Rasmalai'] },
+
+    { menu_id: 65, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Breakfast', items: ['Mysore Masala Dosa', 'Mini Vada', 'Tomato & Mint Chutney', 'Filter Coffee'] },
+    { menu_id: 66, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Lunch', items: ['Kashmiri Rogan Josh (Mutton/Paneer)', 'Kashmiri Pulao', 'Naan', 'Walnut Chutney'] },
+    { menu_id: 67, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Snacks', items: ['Momos (Steamed Chicken / Veg)', 'Spicy Schezwan Sauce', 'Mint Lemonade'] },
+    { menu_id: 68, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Dinner', items: ['Amritsari Kulcha with Chole', 'Dal Makhani', 'Jeera Pulao', 'Malpua with Rabdi'] },
+
+    { menu_id: 69, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Breakfast', items: ['English Breakfast (Baked Beans, Sausages/Hash Browns, Butter Toast, Orange Juice)'] },
+    { menu_id: 70, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Lunch', items: ['Hyderabadi Dum Biryani (Chicken / Paneer)', 'Mirchi Ka Salan', 'Burani Raita'] },
+    { menu_id: 71, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Snacks', items: ['Corn Cheese Balls & Chicken Tenders', 'Hot Chocolate / Masala Chai'] },
+    { menu_id: 72, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Dinner', items: ['Paneer Lababdar & Butter Naan', 'Dal Tadka', 'Jeera Rice', 'Gulab Jamun'] },
+
+    { menu_id: 73, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Breakfast', items: ['Stuffed Amritsari Kulcha & Curd', 'Sprout Salad', 'Espresso / Masala Tea'] },
+    { menu_id: 74, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Lunch', items: ['Penne Arrabbiata / Alfredo Pasta', 'Garlic Bread', 'Tossed Caesar Salad'] },
+    { menu_id: 75, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Snacks', items: ['Chicken & Veg Sliders with Potato Wedges', 'Peach Iced Tea'] },
+    { menu_id: 76, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Dinner', items: ['Dum Pukht Chicken Biryani / Navratan Korma', 'Rumali Roti', 'Phirni'] },
+
+    { menu_id: 77, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Breakfast', items: ['Chole Poori & Suji Halwa', 'Lassi / Masala Chai'] },
+    { menu_id: 78, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Lunch', items: ['Mexican Rice Bowl (Fajita Veggies, Grilled Chicken/Paneer, Salsa, Guacamole)'] },
+    { menu_id: 79, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Snacks', items: ['Thin Crust Pizza Slices (Margherita / BBQ Chicken)', 'Iced Tea'] },
+    { menu_id: 80, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Dinner', items: ['Malai Kofta & Butter Garlic Naan', 'Veg Pulao', 'Dal Makhani', 'Sizzling Brownie'] },
+
+    { menu_id: 81, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Breakfast', items: ['Sunday Continental Brunch (Croissants, Muffins, Eggs Benedict / Avocado Toast, Fresh Juices)'] },
+    { menu_id: 82, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Lunch', items: ['Grand Chef Buffet: Tandoori Platter, Murgh Musallam / Paneer Pasanda, Biryani, Naan, Ice Cream'] },
+    { menu_id: 83, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Snacks', items: ['Club Sandwiches & Crispy Wedges', 'Cappuccino / Milkshake'] },
+    { menu_id: 84, mess_id: 3, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Dinner', items: ['Special Shahi Paneer & Murgh Makhani', 'Laccha Paratha', 'Kashmiri Pulao', 'Tiramisu'] },
+
+    // --- MESS 4: Block C Dining - Veg (Monday to Sunday, all 4 meal slots) ---
+    { menu_id: 85, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Breakfast', items: ['Steamed Idli & Vada', 'Sambar & Coconut Chutney', 'Filter Coffee'] },
+    { menu_id: 86, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Lunch', items: ['Steamed Basmati Rice & Dal Tadka', 'Matar Paneer', 'Chapati & Salad', 'Curd'] },
+    { menu_id: 87, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Snacks', items: ['Veg Cutlets & Mint Dip', 'Hot Ginger Tea'] },
+    { menu_id: 88, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Dinner', items: ['Phulka & Dal Makhani', 'Jeera Rice & Aloo Matar', 'Rasgulla'] },
+
+    { menu_id: 89, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Breakfast', items: ['Crispy Paper Plain Dosa', 'Sambar & Red Chilli Chutney', 'Tea / Coffee'] },
+    { menu_id: 90, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Lunch', items: ['South Indian Meals', 'Steamed Rice', 'Rasam & Sambar', 'Avial & Appalam'] },
+    { menu_id: 91, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Snacks', items: ['Pani Puri & Sev Puri', 'Masala Tea'] },
+    { menu_id: 92, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Dinner', items: ['Tawa Paratha & Paneer Bhurji', 'Veg Pulao & Yellow Dal', 'Moong Dal Halwa'] },
+
+    { menu_id: 93, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Breakfast', items: ['Indori Poha with Sev & Pomegranate', 'Sprouts', 'Tea / Coffee'] },
+    { menu_id: 94, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Lunch', items: ['Chole Bhature & Boondi Raita', 'Steamed Rice', 'Kachumber Salad'] },
+    { menu_id: 95, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Snacks', items: ['Veg Spring Rolls', 'Chilli Garlic Sauce', 'Masala Chai'] },
+    { menu_id: 96, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Dinner', items: ['Palak Paneer & Phulka', 'Steamed Rice & Dal Tadka', 'Gulab Jamun'] },
+
+    { menu_id: 97, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Breakfast', items: ['Gobi Paratha with Fresh Curd', 'Green Chutney & Butter', 'Tea'] },
+    { menu_id: 98, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Lunch', items: ['Steamed Rice & Gujarati Dal', 'Kadhai Paneer', 'Chapati & Salad'] },
+    { menu_id: 99, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Snacks', items: ['Khaman Dhokla', 'Green Mint Chutney', 'Hot Tea'] },
+    { menu_id: 100, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Dinner', items: ['Paneer Butter Masala & Butter Naan', 'Jeera Rice', 'Gajar Halwa'] },
+
+    { menu_id: 101, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Breakfast', items: ['Onion Uttapam with Sambar', 'Coconut Chutney', 'Filter Coffee'] },
+    { menu_id: 102, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Lunch', items: ['Rajma Chawal', 'Aloo Gobi Fry', 'Chapati & Raita'] },
+    { menu_id: 103, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Snacks', items: ['Aloo Tikki with Sweet & Sour Chutney', 'Lemon Tea'] },
+    { menu_id: 104, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Dinner', items: ['Malai Kofta & Phulka', 'Kashmiri Pulao & Dal Makhani', 'Rice Kheer'] },
+
+    { menu_id: 105, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Breakfast', items: ['Poori Bhaji & Suji Halwa', 'Hot Tea / Coffee'] },
+    { menu_id: 106, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Lunch', items: ['Moong Dal Khichdi with Pure Ghee', 'Baingan Masala', 'Papad & Curd'] },
+    { menu_id: 107, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Snacks', items: ['Veg Sandwich', 'Potato Chips', 'Masala Chai'] },
+    { menu_id: 108, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Dinner', items: ['Shahi Paneer & Tandoori Roti', 'Veg Biryani & Raita', 'Ice Cream'] },
+
+    { menu_id: 109, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Breakfast', items: ['Rava Dosa with Sambar', 'Chutney & Banana', 'Filter Coffee'] },
+    { menu_id: 110, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Lunch', items: ['Sunday Special Thali', 'Paneer Tikka Masala', 'Butter Naan', 'Pulao & Gulab Jamun'] },
+    { menu_id: 111, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Snacks', items: ['Corn Chaat & French Fries', 'Cold Coffee'] },
+    { menu_id: 112, mess_id: 4, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Dinner', items: ['Dum Aloo & Phulka', 'Dal Tadka & Steamed Rice', 'Rasmalai'] },
+
+    // --- MESS 5: Block D Dining - Non-Veg (Monday to Sunday, all 4 meal slots) ---
+    { menu_id: 113, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Breakfast', items: ['Scrambled Eggs & Bread Toast', 'Butter & Jam', 'Tea / Coffee'] },
+    { menu_id: 114, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Lunch', items: ['Chicken Korma & Steamed Rice', 'Dal Fry', 'Chapati', 'Salad'] },
+    { menu_id: 115, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Snacks', items: ['Egg Puff & Veg Puff', 'Hot Masala Chai'] },
+    { menu_id: 116, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Monday', meal_type: 'Dinner', items: ['Murgh Dum Biryani', 'Cucumber Raita', 'Salan', 'Shahi Tukda'] },
+
+    { menu_id: 117, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Breakfast', items: ['Cheese Egg Omelette', 'Toast & Fruit Bowl', 'Tea / Coffee'] },
+    { menu_id: 118, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Lunch', items: ['Fish Fry / Fish Curry & Steamed Rice', 'Rasam', 'Chapati', 'Curd'] },
+    { menu_id: 119, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Snacks', items: ['Chicken Kathi Roll', 'Mint Dip', 'Iced Lemon Tea'] },
+    { menu_id: 120, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Tuesday', meal_type: 'Dinner', items: ['Chicken Sukka & Phulka', 'Jeera Rice & Yellow Dal', 'Fruit Salad'] },
+
+    { menu_id: 121, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Breakfast', items: ['Egg Bhurji Pav & Boiled Eggs', 'Filter Coffee / Tea'] },
+    { menu_id: 122, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Lunch', items: ['Pepper Chicken Gravy & Steamed Rice', 'Dal Tadka', 'Chapati & Salad'] },
+    { menu_id: 123, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Snacks', items: ['Chicken Cutlet & Veg Samosa', 'Masala Chai'] },
+    { menu_id: 124, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Wednesday', meal_type: 'Dinner', items: ['Butter Chicken & Butter Naan', 'Veg Pulao & Dal Makhani', 'Gulab Jamun'] },
+
+    { menu_id: 125, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Breakfast', items: ['French Toast with Honey', 'Boiled Eggs', 'Coffee / Tea'] },
+    { menu_id: 126, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Lunch', items: ['Egg Curry with Steamed Rice', 'Aloo Gobi Sauté', 'Chapati', 'Buttermilk'] },
+    { menu_id: 127, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Snacks', items: ['Chicken Keema Samosa', 'Green Chutney', 'Hot Tea'] },
+    { menu_id: 128, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Thursday', meal_type: 'Dinner', items: ['Kadai Chicken & Tandoori Roti', 'Jeera Rice & Dal Fry', 'Gajar Halwa'] },
+
+    { menu_id: 129, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Breakfast', items: ['Poori with Egg Masala', 'Fresh Fruit', 'Hot Tea'] },
+    { menu_id: 130, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Lunch', items: ['Mangalorean Chicken Curry & Rice', 'Tomato Rasam', 'Appalam & Curd'] },
+    { menu_id: 131, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Snacks', items: ['Chicken Shawarma Roll', 'Garlic Dip', 'Lemonade'] },
+    { menu_id: 132, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Friday', meal_type: 'Dinner', items: ['Malabar Chicken Biryani', 'Boondi Raita', 'Papad', 'Payasam'] },
+
+    { menu_id: 133, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Breakfast', items: ['Mushroom & Cheese Omelette', 'Toast & Jam', 'Tea / Coffee'] },
+    { menu_id: 134, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Lunch', items: ['Chicken Chettinad & Steamed Rice', 'Pappu Dal', 'Curd & Pickle'] },
+    { menu_id: 135, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Snacks', items: ['Chicken 65 & Onion Rings', 'Masala Chai'] },
+    { menu_id: 136, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Saturday', meal_type: 'Dinner', items: ['Chicken Tikka Masala & Naan', 'Fried Rice', 'Vanilla Ice Cream'] },
+
+    { menu_id: 137, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Breakfast', items: ['Masala Dosa with Boiled Eggs', 'Chicken Sausages', 'Sambar', 'Coffee'] },
+    { menu_id: 138, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Lunch', items: ['Sunday Mutton Biryani / Chicken Roast', 'Parotta', 'Rasam & Kheer'] },
+    { menu_id: 139, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Snacks', items: ['Chicken Club Sandwich', 'Cold Coffee'] },
+    { menu_id: 140, mess_id: 5, week_start_date: '2026-10-05', day_of_week: 'Sunday', meal_type: 'Dinner', items: ['Chicken Handi & Rumali Roti', 'Kashmiri Pulao & Dal Makhani', 'Rasgulla'] }
   ],
   mealAttendance: [
     { attendance_id: 1, mess_reg_id: 1, attendance_date: '2026-10-05', meal_type: 'Breakfast' },
@@ -402,6 +569,23 @@ class FallbackEngine {
       const rows = data.complaints.map(c => {
         const s = data.students.find(st => st.student_id === c.student_id) || {};
         const ct = data.complaintTypes.find(t => t.complaint_type_id === c.complaint_type_id) || {};
+        const rm = c.room_id ? data.rooms.find(r => r.room_id === c.room_id) : null;
+        const ms = c.mess_id ? data.messes.find(m => m.mess_id === c.mess_id) : null;
+        const hs = c.hostel_id ? data.hostels.find(h => h.hostel_id === c.hostel_id) : null;
+
+        let facility_type = 'General';
+        let facility_name = 'General / Campus-wide';
+        if (rm) {
+          facility_type = 'Room';
+          facility_name = `Room ${rm.room_number}`;
+        } else if (ms) {
+          facility_type = 'Mess';
+          facility_name = ms.mess_name;
+        } else if (hs) {
+          facility_type = 'Hostel';
+          facility_name = hs.hostel_name;
+        }
+
         return {
           complaint_id: c.complaint_id,
           student_id: c.student_id,
@@ -413,7 +597,15 @@ class FallbackEngine {
           description: c.description,
           status: c.status,
           resolved_date: c.resolved_date,
-          remarks: c.remarks
+          remarks: c.remarks,
+          room_id: c.room_id || null,
+          mess_id: c.mess_id || null,
+          hostel_id: c.hostel_id || null,
+          room_number: rm ? rm.room_number : null,
+          mess_name: ms ? ms.mess_name : null,
+          hostel_name: hs ? hs.hostel_name : null,
+          facility_type,
+          facility_name
         };
       }).sort((a, b) => b.complaint_id - a.complaint_id);
       return [rows, []];
@@ -426,7 +618,7 @@ class FallbackEngine {
 
     // 14. INSERT INTO Complaint
     if (upper.startsWith('INSERT INTO COMPLAINT')) {
-      const [student_id, complaint_type_id, description] = params;
+      const [student_id, complaint_type_id, description, room_id, mess_id, hostel_id] = params;
       const newId = data.complaints.length ? Math.max(...data.complaints.map(x => x.complaint_id)) + 1 : 1;
       data.complaints.push({
         complaint_id: newId,
@@ -436,7 +628,10 @@ class FallbackEngine {
         description,
         status: 'Pending',
         resolved_date: null,
-        remarks: null
+        remarks: null,
+        room_id: room_id ? Number(room_id) : null,
+        mess_id: mess_id ? Number(mess_id) : null,
+        hostel_id: hostel_id ? Number(hostel_id) : null
       });
       return [{ insertId: newId, affectedRows: 1 }, []];
     }
