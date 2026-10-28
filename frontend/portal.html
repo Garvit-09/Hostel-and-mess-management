@@ -25,7 +25,7 @@
       <div class="header-right">
         <nav class="nav-links">
           <button class="nav-btn active" data-tab="tab-dashboard" id="btn-tab-dashboard">Overview</button>
-          <button class="nav-btn" data-tab="tab-intelligence" id="btn-tab-intelligence">Hostel Intelligence <span class="badge-mini badge-neo4j">Neo4j</span></button>
+          <button class="nav-btn" data-tab="tab-intelligence" id="btn-tab-intelligence">Hostel Intelligence <span class="badge-mini badge-neo4j">FalkorDB</span></button>
           <button class="nav-btn" data-tab="tab-students" id="btn-tab-students">Students</button>
           <button class="nav-btn" data-tab="tab-rooms" id="btn-tab-rooms">Rooms & Allocations</button>
           <button class="nav-btn" data-tab="tab-mess" id="btn-tab-mess">Mess & Dining</button>
@@ -425,15 +425,15 @@
         <div class="hero-content">
           <div class="hero-badge-row">
             <span class="badge badge-accent">Graph Intelligence</span>
-            <span class="badge badge-neutral" id="graph-engine-badge">Neo4j Bolt</span>
+            <span class="badge badge-neutral" id="graph-engine-badge">FalkorDB</span>
             <span class="badge badge-success" id="mysql-engine-badge">MySQL Authoritative</span>
           </div>
-          <h1>Hostel Intelligence <span class="hero-highlight">Powered by Neo4j</span></h1>
+          <h1>Hostel Intelligence <span class="hero-highlight">Powered by FalkorDB</span></h1>
           <p>Graph-native property traversal module for roommate network discovery, facility grievance hotspot clustering, authoritative vacancy verification, mess supply chains, and interactive graph exploration.</p>
         </div>
         <div class="hero-actions intelligence-actions">
           <button class="btn btn-primary" id="btn-sync-graph" onclick="triggerGraphSync()">
-            <span class="sync-icon">🔄</span> Sync MySQL to Neo4j
+            <span class="sync-icon">🔄</span> Sync MySQL to FalkorDB
           </button>
           <span class="sync-timestamp" id="graph-last-sync-time">Live Hybrid Architecture</span>
         </div>
@@ -501,7 +501,7 @@
                 </div>
                 <div class="arch-divider">⇄</div>
                 <div class="arch-col">
-                  <h4>Neo4j (Graph Intelligence)</h4>
+                  <h4>FalkorDB (Graph Intelligence)</h4>
                   <ul>
                     <li>Stores property graph projection of rooms, messes, and peers.</li>
                     <li>Rapid multi-hop traversals for roommate relationship networks.</li>
@@ -547,7 +547,7 @@
           <div class="intel-split-col">
             <div id="roommate-results-container">
               <div class="empty-state-card">
-                <p>Select a student from the dropdown above to discover current roommates and active room allotments in the Neo4j graph.</p>
+                <p>Select a student from the dropdown above to discover current roommates and active room allotments in the FalkorDB graph.</p>
               </div>
             </div>
 
@@ -679,7 +679,7 @@
               </tr>
             </thead>
             <tbody id="hotspots-table-body">
-              <tr><td colspan="8" class="loading-state">Loading grievance hotspots from Neo4j...</td></tr>
+              <tr><td colspan="8" class="loading-state">Loading grievance hotspots from FalkorDB...</td></tr>
             </tbody>
           </table>
         </div>
@@ -732,7 +732,7 @@
 
         <div id="mess-connections-container">
           <div class="empty-state-card">
-            <p>Select a dining facility from the dropdown above to inspect caterer relationships, registered students, and facility-specific grievances in the Neo4j graph.</p>
+            <p>Select a dining facility from the dropdown above to inspect caterer relationships, registered students, and facility-specific grievances in the FalkorDB graph.</p>
           </div>
         </div>
       </div>
@@ -1090,6 +1090,8 @@
         <button type="button" class="btn btn-danger" id="btn-confirm-delete">Delete</button>
       </div>
     </div>
+  </div>
+
   <!-- Modal: Inspect Facility Complaints (Hotspot Drilldown) -->
   <div class="modal-backdrop" id="modal-facility-complaints">
     <div class="modal-dialog modal-dialog-lg">
@@ -1106,6 +1108,7 @@
                 <th>ID</th>
                 <th>Category</th>
                 <th>Type</th>
+                <th>Reporter</th>
                 <th>Date</th>
                 <th>Description</th>
                 <th>Status</th>
@@ -1130,7 +1133,7 @@
       </div>
       <div class="modal-body text-center" id="sync-modal-body">
         <div class="spinner-large mb-3" id="sync-spinner"></div>
-        <h4 id="sync-status-title">Synchronizing MySQL to Neo4j...</h4>
+        <h4 id="sync-status-title">Synchronizing MySQL to FalkorDB...</h4>
         <p class="text-sm text-muted" id="sync-status-detail">Executing idempotent ETL extraction, building constraints, and updating relationship graph projection.</p>
       </div>
       <div class="modal-footer">

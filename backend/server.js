@@ -14,6 +14,9 @@ app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/mess', require('./routes/mess'));
 app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/queries', require('./routes/queries'));
+// VIVA_NEO4J_ARCHITECTURE
+// VIVA_NEO4J_API
+// Mounts all graph intelligence endpoints: roommates, complaint hotspots, smart vacancy, mess connections, and explorer
 app.use('/api/graph', require('./routes/graph'));
 
 // Status / Health check endpoint

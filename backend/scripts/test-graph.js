@@ -1,9 +1,10 @@
-// test-graph.js – Automated Verification Suite for Neo4j Graph Intelligence & Regression Tests
+// test-graph.js – Automated Verification Suite for FalkorDB Graph Intelligence & Regression Tests
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const http = require('http');
 const pool = require('../db');
-const neo = require('../neo4j');
-const { fetchSourceData, syncDatabaseToGraph } = require('./sync-neo4j');
+const falkor = require('../falkordb');
+const neo = falkor; // Maintain 'neo' alias for seamless test suite execution
+const { fetchSourceData, syncDatabaseToGraph } = require('./sync-falkordb');
 const {
   getNodeGraphId,
   getEdgeGraphId,
@@ -14,7 +15,7 @@ const {
 
 async function runTests() {
   console.log('=======================================================');
-  console.log('RUNNING NEO4J GRAPH INTELLIGENCE & REGRESSION TEST SUITE');
+  console.log('RUNNING FALKORDB GRAPH INTELLIGENCE & REGRESSION TEST SUITE');
   console.log('=======================================================');
 
   let passed = 0;
@@ -48,15 +49,20 @@ async function runTests() {
     assert(false, `Source extraction failed: ${err.message}`);
   }
 
-  // 2. Neo4j Connectivity & Graceful Handling Test
-  console.log('\n[Test 2] Testing Neo4j Connection & Graceful Degradation...');
+  // 2. FalkorDB Connectivity & Graceful Handling Test
+  console.log('\n[Test 2] Testing FalkorDB Connection & Graceful Degradation...');
   try {
-    const health = await neo.checkHealth();
+    const health = await falkor.checkHealth();
     assert(health !== null, 'Health check returned structured response');
     if (health.connected) {
-      console.log(`  ℹ️ Live Neo4j instance detected at ${health.uri} (Latency: ${health.latencyMs}ms)`);
+      console.log(`  ℹ️ Live FalkorDB instance detected at ${health.host}:${health.port} (Graph: ${health.graphName}, Latency: ${health.latencyMs}ms)`);
       assert(typeof health.nodeCount === 'number', `Node count reported: ${health.nodeCount}`);
 
+      // ==============================================================================
+      // VIVA_NEO4J_SYNC: IDEMPOTENT SYNCHRONIZATION TEST
+      // Purpose: Proves that repeated ETL executions update existing records rather than duplicating nodes.
+      // Demonstration search: VIVA_NEO4J_SYNC
+      // ==============================================================================
       // 3. Idempotent Synchronization Test
       console.log('\n[Test 3] Testing Idempotency of ETL Synchronization...');
       const firstSync = await syncDatabaseToGraph();
@@ -69,6 +75,16 @@ async function runTests() {
       const [nodeRes] = await neo.readQuery('MATCH (n:Student) RETURN count(n) AS studentCount');
       assert(nodeRes.studentCount === 12, `Student node count is exactly 12 after repeated sync (got ${nodeRes.studentCount})`);
 
+      // ==============================================================================
+      // VIVA_ROOMMATE_FINDER: LIVE CYPHER ROOMMATE TRAVERSAL TEST
+      // VIVA_NEO4J_CYPHER: MATCHING PEERS SHARING ACTIVE ROOM ALLOCATION
+      // Purpose: Verifies that Cypher correctly finds peers allocated to the same room while excluding the student themselves.
+      // Cypher explanation:
+      //   - MATCH (s:Student {student_id: 1})-[a1:ALLOCATED_TO {status: 'Active'}]->(r:Room) finds the active room.
+      //   - OPTIONAL MATCH (rm:Student)-[a2:ALLOCATED_TO {status: 'Active'}]->(r) finds peers.
+      //   - WHERE rm.student_id <> s.student_id ensures the student is not returned as their own roommate.
+      // Demonstration search: VIVA_ROOMMATE_FINDER
+      // ==============================================================================
       // 4. Live Roommate Cypher Query Test
       console.log('\n[Test 4] Testing Roommate Discovery via Cypher...');
       const roommateRes = await neo.readQuery(`
@@ -82,6 +98,16 @@ async function runTests() {
       assert(roommateRes[0].roommates.includes('Aarav Sharma'), 'Identified Aarav Sharma as active roommate');
       assert(!roommateRes[0].roommates.includes('Aditya Sen'), 'Student is not listed as their own roommate');
 
+      // ==============================================================================
+      // VIVA_GRIEVANCE_HOTSPOT: GRIEVANCE HOTSPOT AGGREGATION TEST
+      // VIVA_NEO4J_CYPHER: COUNTING GRIEVANCES GROUPED BY FACILITY NODE
+      // Purpose: Verifies that complaints connected by [:ASSOCIATED_WITH] can be counted and ordered by frequency.
+      // Cypher explanation:
+      //   - MATCH (c:Complaint)-[:ASSOCIATED_WITH]->(fac) traverses to associated Room, Mess, or Hostel.
+      //   - labels(fac)[0] dynamically extracts the facility node label.
+      //   - count(c) computes the aggregate grievance density.
+      // Demonstration search: VIVA_GRIEVANCE_HOTSPOT
+      // ==============================================================================
       // 5. Hotspot Cypher Query Test
       console.log('\n[Test 5] Testing Grievance Hotspot Detection via Cypher...');
       const hotspotRes = await neo.readQuery(`
@@ -91,13 +117,20 @@ async function runTests() {
       `);
       assert(hotspotRes.length > 0, `Identified ${hotspotRes.length} complaint hotspots in graph`);
     } else {
-      console.log(`  ℹ️ Live Neo4j not running (${health.message || health.error}). Verified graceful offline degradation.`);
+      console.log(`  ℹ️ Live FalkorDB not running (${health.message || health.error}). Verified graceful offline degradation.`);
       assert(health.status === 'unconfigured' || health.status === 'disconnected', 'Status accurately reported as unconfigured/disconnected');
     }
   } catch (err) {
     assert(false, `Neo4j check error: ${err.message}`);
   }
 
+  // ==============================================================================
+  // VIVA_SMART_VACANCY: MYSQL RECONCILIATION RULE TEST
+  // VIVA_NEO4J_DATA_VALIDATION: VERIFYING VACANT BEDS = MAX(0, CAPACITY - OCCUPANCY)
+  // Purpose: Confirms that MySQL serves as the final authority on vacancy calculations to prevent over-allocation.
+  // Formula: vacant_beds = Math.max(0, capacity - active_allocations).
+  // Demonstration search: VIVA_SMART_VACANCY
+  // ==============================================================================
   // 6. MySQL Vacancy Validation Rule Test
   console.log('\n[Test 6] Testing Rule: MySQL is Final Authority for Vacancy...');
   try {
@@ -259,13 +292,39 @@ async function runTests() {
 
   console.log('\n[Regression 9] Live Endpoint Validation: Every Edge References Existing Nodes in Payload...');
   try {
-    const exploreRes = await new Promise((resolve, reject) => {
-      http.get('http://localhost:4000/api/graph/explore', res => {
-        let body = '';
-        res.on('data', chunk => body += chunk);
-        res.on('end', () => resolve(JSON.parse(body)));
-      }).on('error', reject);
-    });
+    let exploreRes;
+    let ephemeralServer = null;
+    try {
+      exploreRes = await new Promise((resolve, reject) => {
+        const req = http.get('http://localhost:4000/api/graph/explore', res => {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => resolve(JSON.parse(body)));
+        });
+        req.on('error', reject);
+        req.setTimeout(2000, () => {
+          req.destroy();
+          reject(new Error('Timeout'));
+        });
+      });
+    } catch (_) {
+      // If standalone server on port 4000 is not running, spawn ephemeral express instance
+      const express = require('express');
+      const testApp = express();
+      testApp.use(express.json());
+      testApp.use('/api/graph', require('../routes/graph'));
+      await new Promise(resolve => {
+        ephemeralServer = testApp.listen(4005, resolve);
+      });
+      exploreRes = await new Promise((resolve, reject) => {
+        http.get('http://localhost:4005/api/graph/explore', res => {
+          let body = '';
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => resolve(JSON.parse(body)));
+        }).on('error', reject);
+      });
+      if (ephemeralServer) ephemeralServer.close();
+    }
 
     const elements = exploreRes.elements;
     assert(elements !== undefined, 'Explore endpoint returned valid elements object');
@@ -305,7 +364,7 @@ async function runTests() {
   console.log('\n=======================================================');
   console.log(`TOTAL TEST SUMMARY: ${passed} Passed, ${failed} Failed.`);
   console.log('=======================================================');
-  await neo.closeDriver();
+  await falkor.closeConnection();
   process.exit(failed > 0 ? 1 : 0);
 }
 

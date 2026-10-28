@@ -2,7 +2,8 @@
 // HOSTEL & MESS MANAGEMENT SYSTEM (DA2) - FRONTEND APPLICATION SCRIPT
 // ==============================================================================
 
-const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+// Server API Base URL resolution (port 4000 Express backend)
+const API_BASE = (window.location.protocol.startsWith('http') && window.location.port === '4000')
   ? `${window.location.origin}/api`
   : 'http://localhost:4000/api';
 
@@ -1018,7 +1019,13 @@ function closeModal(id) {
 }
 
 function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = message;
@@ -1084,6 +1091,24 @@ async function loadHostelIntelligence() {
   filterSmartVacancyRooms();
 }
 
+// VIVA_NEO4J_OVERVIEW
+// VIVA_NEO4J_FALLBACK
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Polls backend /api/graph/health to display live connection state, round-trip latency,
+ *   and current node count in the dashboard header.
+ *   Gracefully displays fallback indicator if Neo4j is offline.
+ *
+ * VIVA 20-SECOND EXPLANATION:
+ *   "This frontend health monitor polls the backend health check. If Neo4j Bolt is responsive,
+ *   it shows a green badge with round-trip latency and total node count. If Neo4j is stopped,
+ *   it dynamically updates the UI to show that the hybrid fallback engine is serving relational
+ *   source data with zero application downtime."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_NEO4J_OVERVIEW
+ */
 // Health status check
 async function fetchGraphHealth() {
   try {
@@ -1094,11 +1119,11 @@ async function fetchGraphHealth() {
 
     if (neoBadge) {
       if (data.neo4j && data.neo4j.connected) {
-        neoBadge.textContent = `Neo4j Connected (${data.neo4j.latencyMs}ms)`;
+        neoBadge.textContent = `FalkorDB Connected (${data.neo4j.latencyMs}ms)`;
         neoBadge.className = 'badge badge-success';
         if (syncTime) syncTime.textContent = `Graph Status: Synchronized (${data.neo4j.nodeCount} nodes)`;
       } else {
-        neoBadge.textContent = 'Neo4j Bolt [Offline - Fallback Engine Active]';
+        neoBadge.textContent = 'FalkorDB [Offline - Fallback Engine Active]';
         neoBadge.className = 'badge badge-warning';
         if (syncTime) syncTime.textContent = 'Hybrid Fallback Active (Zero Interruption)';
       }
@@ -1112,6 +1137,12 @@ async function fetchGraphHealth() {
   }
 }
 
+// VIVA_NEO4J_OVERVIEW
+/**
+ * PURPOSE:
+ *   Fetches aggregate graph metrics from /api/graph/overview to populate dashboard counters
+ *   (total students, rooms, active allocations, and linked vs unlinked grievances).
+ */
 // Overview metrics
 async function loadGraphOverview() {
   try {
@@ -1198,6 +1229,29 @@ function handleRoommateStudentChange() {
   searchCurrentRoommates();
 }
 
+// VIVA_ROOMMATE_FINDER
+// VIVA_NEO4J_FRONTEND
+// VIVA_NEO4J_LIMITATIONS
+/**
+ * PURPOSE:
+ *   Handles student selection change, calls GET /api/graph/students/:id/roommates,
+ *   and renders roommate identity cards and room metadata. Concurrently calls
+ *   initRoommateGraph() to render the Cytoscape relationship canvas.
+ *
+ * LIMITATION VIVA NOTE:
+ *   This UI shows CURRENT co-allocated roommates sharing the exact same room.
+ *   It does NOT suggest prospective roommates, and gender/hostel eligibility
+ *   rules are enforced upstream during MySQL room allocation, not here.
+ *
+ * VIVA 20-SECOND EXPLANATION:
+ *   "When an administrator selects a student in the dropdown, searchCurrentRoommates()
+ *   fetches both the tabular profile from /roommates and triggers initRoommateGraph()
+ *   for the visual graph canvas. If the student has no active allocation, it cleanly
+ *   displays an unallocated state without breaking the layout."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_ROOMMATE_FINDER
+ */
 async function searchCurrentRoommates() {
   const select = document.getElementById('roommate-student-select');
   const studentId = select ? select.value : null;
@@ -1308,6 +1362,15 @@ async function searchCurrentRoommates() {
   }
 }
 
+// VIVA_ROOMMATE_FINDER
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Initializes Cytoscape.js canvas for roommate visualization. Fetches topology
+ *   from /api/graph/students/:id/roommates-graph, applies CoSE force-directed layout,
+ *   styles nodes by role (selected student vs roommates vs hostel hierarchy), and
+ *   binds interactive tap handlers to inspect node properties.
+ */
 async function initRoommateGraph(studentId) {
   const container = document.getElementById('roommate-cytoscape-container');
   if (!container) return;
@@ -1552,6 +1615,13 @@ function roommateCyResetLayout() {
   }
 }
 
+// VIVA_ROOMMATE_FINDER
+/**
+ * PURPOSE:
+ *   Toggles the historical room allocation panel for the selected student by calling
+ *   GET /api/graph/students/:id/history. Discovers previous rooms and historical roommates
+ *   across past semesters.
+ */
 async function toggleRoommateHistory() {
   const container = document.getElementById('roommate-history-container');
   if (!container) return;
@@ -1629,6 +1699,28 @@ function handleHotspotFilterChange() {
   loadComplaintHotspotsGraph();
 }
 
+// VIVA_GRIEVANCE_HOTSPOT
+// VIVA_NEO4J_FRONTEND
+// VIVA_NEO4J_LIMITATIONS
+/**
+ * PURPOSE:
+ *   Fetches ranked grievance hotspot aggregation from GET /api/graph/complaint-hotspots
+ *   filtered by grievance category and resolution status.
+ *   Renders the ranked hotspot table and unlinked grievances count.
+ *
+ * LIMITATION VIVA NOTE:
+ *   Grievance counts denote spatial association with a facility, NOT proof of causal
+ *   liability or contractor negligence. Unlinked complaints are tracked as campus-wide issues.
+ *
+ * VIVA 30-SECOND EXPLANATION:
+ *   "This function fetches ranked grievance hotspots across campus dorm rooms, messes, and hostels.
+ *   It displays open vs resolved complaints for each facility, and provides an 'Inspect Grievances'
+ *   modal action so hostel administrators can drill down into the specific complaints filed for
+ *   that hot spot."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_GRIEVANCE_HOTSPOT
+ */
 async function loadComplaintHotspots() {
   const catEl = document.getElementById('hotspot-category-filter');
   const statEl = document.getElementById('hotspot-status-filter');
@@ -1660,29 +1752,61 @@ async function loadComplaintHotspots() {
         ? 'badge-accent'
         : (h.facility_type === 'Mess' ? 'badge-warning' : 'badge-outline');
 
-      const safeComplaints = JSON.stringify(h.complaints || []).replace(/"/g, '&quot;');
+      const facId = h.facility_id != null ? String(h.facility_id) : '';
+      const safeFacName = escapeHtml(h.facility_name || `${h.facility_type} #${facId}`);
+      const safeHostel = escapeHtml(h.hostel_name || 'Campus');
 
       return `
         <tr id="hotspot-row-${i}">
           <td><strong>#${i + 1}</strong></td>
           <td><span class="badge ${typeBadge}">${h.facility_type}</span></td>
-          <td><strong>${h.facility_name}</strong></td>
-          <td>${h.hostel_name || 'Campus'}</td>
+          <td><strong>${safeFacName}</strong></td>
+          <td>${safeHostel}</td>
           <td><span class="badge badge-danger">${h.openComplaints}</span></td>
           <td><span class="badge badge-success">${h.resolvedComplaints}</span></td>
           <td><strong>${h.totalComplaints}</strong></td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="openHotspotInspectionModal('${h.facility_type}', '${h.facility_name.replace(/'/g, "\\'")}', '${safeComplaints}')">
+            <button type="button"
+                    class="btn btn-secondary btn-sm btn-inspect-grievances"
+                    data-facility-type="${h.facility_type}"
+                    data-facility-id="${facId}"
+                    data-facility-name="${safeFacName}"
+                    data-hostel-name="${safeHostel}">
               Inspect Grievances
             </button>
           </td>
         </tr>`;
     }).join('');
+
+    // Attach delegated click listener once to parent table for robust event handling
+    const hotspotsTable = document.getElementById('hotspots-table');
+    if (hotspotsTable && !hotspotsTable.dataset.listenerAttached) {
+      hotspotsTable.dataset.listenerAttached = 'true';
+      hotspotsTable.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-inspect-grievances');
+        if (!btn) return;
+        e.preventDefault();
+        if (btn.disabled || btn.dataset.loading === 'true') return;
+        const facType = btn.getAttribute('data-facility-type');
+        const facId = btn.getAttribute('data-facility-id');
+        inspectFacilityGrievances(facType, facId, btn);
+      });
+    }
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="color: var(--danger-color);">Failed to load hotspots: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state" style="color: var(--danger-color);">Failed to load hotspots: ${escapeHtml(err.message)}</td></tr>`;
   }
 }
 
+// VIVA_GRIEVANCE_HOTSPOT
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Loads the spatial grievance heat map canvas from GET /api/graph/hotspots-graph.
+ *   Applies color gradient scaling based on open complaint counts:
+ *   - 0-1 complaints: Neutral gray/light
+ *   - 2-4 complaints: Warning amber
+ *   - 5+ complaints: Critical high-intensity red
+ */
 async function loadComplaintHotspotsGraph() {
   const container = document.getElementById('hotspots-cytoscape-container');
   if (!container) return;
@@ -1988,54 +2112,273 @@ function hotspotsCyResetLayout() {
   }
 }
 
-function openHotspotInspectionModal(facType, facName, encodedComplaints) {
+// VIVA_GRIEVANCE_HOTSPOT
+// VIVA_NEO4J_FRONTEND
+/**
+ * Safely escapes HTML special characters to prevent XSS and attribute injection.
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * PURPOSE:
+ *   Handles clicks on 'Inspect Grievances' buttons in the Hotspots table.
+ *   Retrieves authoritative grievance records from backend /api/graph/facilities/:type/:id/complaints
+ *   and renders them inside modal-facility-complaints with live status, reporter details, and dates.
+ *
+ * ENTRY POINT:
+ *   Called when clicking any .btn-inspect-grievances button or via table event delegation.
+ *
+ * PARAMS:
+ *   - facType: Facility type ('Room', 'Mess', or 'Hostel')
+ *   - facId: Facility unique ID (room_id, mess_id, or hostel_id)
+ *   - btnElement: (Optional) The clicked button element for loading state toggling
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_GRIEVANCE_HOTSPOT
+ */
+// VIVA_GRIEVANCE_HOTSPOT
+// VIVA_NEO4J_FRONTEND
+// VIVA_NEO4J_API
+/**
+ * PURPOSE:
+ *   Handles "Inspect Grievances" user action on any row of the Grievance Hotspots table.
+ *   Disables the button and shows "Loading...", fetches grievances for the selected facility
+ *   with an 8-second AbortController timeout, opens the modal only upon successful response,
+ *   renders complaints, and guarantees in a finally block that the button is restored.
+ *
+ * ENTRY POINT:
+ *   inspectFacilityGrievances(facType, facId, btnElement)
+ */
+async function inspectFacilityGrievances(facType, facId, btnElement) {
+  if (!facType || !facId) {
+    showToast('Facility identifier missing.', 'warning');
+    return;
+  }
+
+  // Prevent double submissions on rapid clicks
+  if (btnElement && (btnElement.disabled || btnElement.dataset.loading === 'true')) {
+    return;
+  }
+
+  // Preserve original button text and transition to loading state
+  let originalBtnText = 'Inspect Grievances';
+  if (btnElement) {
+    btnElement.dataset.loading = 'true';
+    btnElement.disabled = true;
+    if (!btnElement.dataset.originalText) {
+      const cur = btnElement.textContent.trim();
+      btnElement.dataset.originalText = (cur && !cur.toLowerCase().includes('load')) ? cur : 'Inspect Grievances';
+    }
+    originalBtnText = btnElement.dataset.originalText;
+    btnElement.textContent = 'Loading...';
+  }
+
   const modal = document.getElementById('modal-facility-complaints');
   const title = document.getElementById('modal-facility-title');
   const meta = document.getElementById('modal-facility-meta');
   const tbody = document.getElementById('modal-facility-complaints-body');
 
+  let facName = '';
+  let hostelName = '';
+  if (btnElement && btnElement.getAttribute) {
+    facName = btnElement.getAttribute('data-facility-name') || '';
+    hostelName = btnElement.getAttribute('data-hostel-name') || '';
+  }
+
+  // Set 8-second request timeout via AbortController
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const url = `${API_BASE}/graph/facilities/${encodeURIComponent(String(facType).toLowerCase())}/${encodeURIComponent(String(facId))}/complaints`;
+    let res;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError') {
+        throw new Error('Request timed out after 8s while contacting the server.');
+      }
+      throw new Error(`Network failure: ${fetchErr.message}`);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      throw new Error(`Invalid response format from server (${res.status} ${res.statusText})`);
+    }
+
+    if (!res.ok) {
+      throw new Error(data.error || `Server error (HTTP ${res.status})`);
+    }
+
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response payload from server.');
+    }
+
+    const complaints = Array.isArray(data.complaints) ? data.complaints : [];
+    const facility = data.facility || {};
+    const finalFacName = facility.name || facName || `${facType} #${facId}`;
+    const finalHostelName = facility.hostel_name || hostelName || 'Campus';
+
+    // Open detail modal only after valid response data is received
+    openModal('modal-facility-complaints');
+
+    if (title) title.textContent = `Grievances — ${finalFacName}`;
+
+    if (meta) {
+      const openCount = data.counts?.open ?? complaints.filter(c => c.status !== 'Resolved').length;
+      const resolvedCount = data.counts?.resolved ?? complaints.filter(c => c.status === 'Resolved').length;
+      const engineBadge = data.neo4jConnected ? 'badge-accent' : 'badge-neutral';
+      const engineLabel = data.neo4jConnected ? 'Neo4j Graph' : 'MySQL Relational';
+
+      meta.innerHTML = `
+        <div class="stats-pills">
+          <div class="stat-pill"><span class="label">Facility:</span> <span class="val">${escapeHtml(finalFacName)}</span></div>
+          <div class="stat-pill"><span class="label">Location:</span> <span class="val">${escapeHtml(finalHostelName)}</span></div>
+          <div class="stat-pill"><span class="label">Unresolved:</span> <span class="val" style="color: var(--danger-color); font-weight: 700;">${openCount}</span></div>
+          <div class="stat-pill"><span class="label">Resolved:</span> <span class="val" style="color: var(--success-color); font-weight: 700;">${resolvedCount}</span></div>
+          <div class="stat-pill"><span class="label">Total:</span> <span class="val">${complaints.length}</span></div>
+          <div class="stat-pill"><span class="badge ${engineBadge}">${engineLabel}</span></div>
+        </div>`;
+    }
+
+    if (tbody) {
+      if (complaints.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No grievances found for this facility (${escapeHtml(finalFacName)}).</td></tr>`;
+      } else {
+        tbody.innerHTML = complaints.map(c => {
+          const badgeClass = c.status === 'Resolved'
+            ? 'badge-success'
+            : (c.status === 'In Progress' ? 'badge-warning' : 'badge-danger');
+
+          const reporter = c.student_name
+            ? `<strong>${escapeHtml(c.student_name)}</strong> <span class="text-muted text-xs">(${escapeHtml(c.student_reg_no || (c.student_id ? `#${c.student_id}` : ''))})</span>`
+            : '<span class="text-muted">Campus Resident</span>';
+
+          const remarksHtml = c.remarks
+            ? `<div class="text-xs text-muted mt-1" style="border-left: 2px solid var(--accent-color); padding-left: 6px;">
+                 <strong>Warden Note:</strong> ${escapeHtml(c.remarks)}
+               </div>`
+            : '';
+
+          return `
+            <tr>
+              <td><strong>#${c.complaint_id}</strong></td>
+              <td><span class="badge badge-neutral">${escapeHtml(c.category || 'General')}</span></td>
+              <td><strong>${escapeHtml(c.type_name || 'General')}</strong></td>
+              <td>${reporter}</td>
+              <td>${c.complaint_date || '--'}</td>
+              <td>
+                <div>${escapeHtml(c.description || '')}</div>
+                ${remarksHtml}
+              </td>
+              <td><span class="badge ${badgeClass}">${escapeHtml(c.status || 'Pending')}</span></td>
+            </tr>`;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    const errorMsg = err.name === 'AbortError'
+      ? 'Request timed out after 8s while loading grievances.'
+      : (err.message || 'Error loading grievances');
+    showToast(`Inspection failed: ${errorMsg}`, 'danger');
+  } finally {
+    // Guaranteed button restoration in all execution paths
+    if (btnElement) {
+      btnElement.disabled = false;
+      btnElement.dataset.loading = 'false';
+      btnElement.textContent = originalBtnText;
+    }
+  }
+}
+
+// Backward-compatible adapter for legacy callers
+function openHotspotInspectionModal(facType, facName, encodedComplaints) {
+  // If encoded complaints provided, parse safely or delegate
   let complaints = [];
   try {
-    complaints = JSON.parse(encodedComplaints.replace(/&quot;/g, '"'));
+    if (typeof encodedComplaints === 'string') {
+      complaints = JSON.parse(encodedComplaints.replace(/&quot;/g, '"'));
+    } else if (Array.isArray(encodedComplaints)) {
+      complaints = encodedComplaints;
+    }
   } catch (e) {
     complaints = [];
   }
 
-  if (title) title.textContent = `Grievances for ${facName}`;
+  const modal = document.getElementById('modal-facility-complaints');
+  const title = document.getElementById('modal-facility-title');
+  const meta = document.getElementById('modal-facility-meta');
+  const tbody = document.getElementById('modal-facility-complaints-body');
+
+  openModal('modal-facility-complaints');
+  if (title) title.textContent = `Grievances — ${facName}`;
   if (meta) {
     meta.innerHTML = `
       <div class="stats-pills">
-        <div class="stat-pill"><span class="label">Facility Type:</span> <span class="val">${facType}</span></div>
+        <div class="stat-pill"><span class="label">Facility Type:</span> <span class="val">${escapeHtml(facType)}</span></div>
         <div class="stat-pill"><span class="label">Total Records:</span> <span class="val">${complaints.length}</span></div>
       </div>`;
   }
 
   if (tbody) {
     if (!complaints.length) {
-      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No individual grievance records recorded.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No individual grievance records recorded.</td></tr>`;
     } else {
       tbody.innerHTML = complaints.map(c => {
         const badge = c.status === 'Resolved' ? 'badge-success' : (c.status === 'In Progress' ? 'badge-warning' : 'badge-danger');
         return `
           <tr>
             <td>#${c.complaint_id}</td>
-            <td><span class="badge badge-neutral">${c.category || ''}</span></td>
-            <td><strong>${c.type_name || ''}</strong></td>
+            <td><span class="badge badge-neutral">${escapeHtml(c.category || '')}</span></td>
+            <td><strong>${escapeHtml(c.type_name || '')}</strong></td>
+            <td><span class="text-muted">Campus Resident</span></td>
             <td>${c.complaint_date || ''}</td>
-            <td><small>${c.description || ''}</small></td>
+            <td><small>${escapeHtml(c.description || '')}</small></td>
             <td><span class="badge ${badge}">${c.status}</span></td>
           </tr>`;
       }).join('');
     }
   }
-
-  openModal('modal-facility-complaints');
 }
 
 // ------------------------------------------------------------------------------
 // FEATURE 3: SMART ROOM & VACANCY FINDER (ZERO-OVERFLOW CARDS)
 // ------------------------------------------------------------------------------
 
+// VIVA_SMART_VACANCY
+// VIVA_NEO4J_FRONTEND
+// VIVA_NEO4J_LIMITATIONS
+/**
+ * PURPOSE:
+ *   Calls GET /api/graph/rooms/available with hostel, AC type, and capacity filters.
+ *   Renders room vacancy cards displaying room number, building hierarchy, room type,
+ *   vacant bed count, and 'Verified MySQL Vacancy' consistency badge.
+ *
+ * LIMITATION VIVA NOTE:
+ *   This is a reporting and discovery interface only. It does NOT mutate room allocations.
+ *   Fully occupied rooms are returned with vacant_beds = 0 and marked with 'Fully Occupied' badge.
+ *
+ * VIVA 25-SECOND EXPLANATION:
+ *   "This function provides real-time room vacancy discovery. It combines graph hierarchy
+ *   traversal across Hostels, Blocks, Floors, and Rooms with live MySQL occupancy cross-validation.
+ *   Each card displays vacant beds computed as max(0, capacity - occupancy), protecting against
+ *   overflow while maintaining transactional accuracy."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_SMART_VACANCY
+ */
 async function filterSmartVacancyRooms() {
   const hostelId = document.getElementById('vacancy-hostel-filter')?.value || '';
   const acType = document.getElementById('vacancy-actype-filter')?.value || '';
@@ -2105,6 +2448,27 @@ function populateMessExplorerSelect() {
   if (current) select.value = current;
 }
 
+// VIVA_MESS_CONNECTION
+// VIVA_NEO4J_FRONTEND
+// VIVA_NEO4J_LIMITATIONS
+/**
+ * PURPOSE:
+ *   Handles dining facility dropdown selection, calls GET /api/graph/mess/:id/connections,
+ *   and renders caterer contractor card, registered student roster, and linked grievances.
+ *   Concurrently calls initMessGraph() to render the Cytoscape supply chain canvas.
+ *
+ * LIMITATION VIVA NOTE:
+ *   Relationships represent stored administrative associations (SERVED_BY, REGISTERED_FOR,
+ *   ASSOCIATED_WITH). They do not constitute scientific proof of catering misconduct.
+ *
+ * VIVA 25-SECOND EXPLANATION:
+ *   "This function loads the mess supply and student enrollment profile. It visualizes the caterer
+ *   contractor, active enrolled students, and facility-specific dining grievances. Concurrently,
+ *   it triggers initMessGraph() to render the dining hall's relational topology in Cytoscape.js."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_MESS_CONNECTION
+ */
 async function handleMessExplorerChange() {
   const select = document.getElementById('mess-explorer-select');
   const messId = select ? select.value : null;
@@ -2256,6 +2620,15 @@ async function handleMessExplorerChange() {
   }
 }
 
+// VIVA_MESS_CONNECTION
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Initializes Cytoscape.js canvas for mess supply chain visualization.
+ *   Fetches topology from GET /api/graph/mess/:id/graph and displays the central Mess node,
+ *   its SERVED_BY Caterer node, LOCATED_AT Hostel node, registered Students, and
+ *   linked grievances with custom color coding and interactive node inspector.
+ */
 async function initMessGraph(messId) {
   const container = document.getElementById('mess-cytoscape-container');
   if (!container) return;
@@ -2508,6 +2881,22 @@ function messCyResetLayout() {
 // FEATURE 5: INTERACTIVE RELATIONSHIP GRAPH (CYTOSCAPE.JS)
 // ------------------------------------------------------------------------------
 
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Entry point for the Interactive Graph Visualizer tab. Calls GET /api/graph/explore
+ *   with current entity filter type ('all', 'Student', 'Room', 'Hostel', 'Mess', 'Caterer', 'Complaint').
+ *   Passes returned nodes and edges to renderCytoscapeGraph().
+ *
+ * VIVA 25-SECOND EXPLANATION:
+ *   "This function connects the full campus graph traversal with Cytoscape.js. It requests
+ *   multi-entity subgraphs from /api/graph/explore and feeds them into our client-side graph
+ *   engine. Cytoscape.js renders the visual canvas, but the underlying topology is computed
+ *   by Neo4j Cypher queries or our relational fallback engine."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_NEO4J_FRONTEND
+ */
 async function initGraphExplorer() {
   const container = document.getElementById('cytoscape-container');
   if (!container) return;
@@ -2533,6 +2922,15 @@ async function initGraphExplorer() {
   }
 }
 
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Instantiates and manages the primary Cytoscape.js visualization instance.
+ *   - Verifies endpoint integrity (client-side defensive check that source & target exist)
+ *   - Configures CoSE (Compound Spring Embedder) physics layout
+ *   - Defines color tokens per entity label (Student, Room, Hostel, Mess, Caterer, Complaint)
+ *   - Binds click listeners to open the graph details sidebar inspector
+ */
 function renderCytoscapeGraph(elements) {
   const container = document.getElementById('cytoscape-container');
   if (!container || typeof cytoscape === 'undefined') return;
@@ -2770,6 +3168,23 @@ function closeGraphDetails() {
 // FEATURE 7: ADMINISTRATIVE SYNCHRONIZATION
 // ------------------------------------------------------------------------------
 
+// VIVA_NEO4J_SYNC
+// VIVA_NEO4J_FRONTEND
+/**
+ * PURPOSE:
+ *   Handles administrator click on the 'Sync Graph Projection' button.
+ *   Opens sync progress modal, triggers POST /api/graph/sync, displays execution stats
+ *   (time elapsed in ms, student count, room count, mess count, grievance count, facility link count),
+ *   and triggers background refreshes of all graph tabs.
+ *
+ * VIVA 20-SECOND EXPLANATION:
+ *   "This function enables one-click synchronization directly from the web portal. It opens
+ *   a status modal, invokes the POST /api/graph/sync endpoint, reports real-time insertion statistics,
+ *   and automatically refreshes all open graph visualizations with the newly synchronized state."
+ *
+ * DEMONSTRATION SEARCH:
+ *   Ctrl + Shift + F -> VIVA_NEO4J_SYNC
+ */
 async function triggerGraphSync() {
   openModal('modal-graph-sync');
   const spinner = document.getElementById('sync-spinner');

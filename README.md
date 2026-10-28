@@ -1,10 +1,9 @@
 # 🏫 Hostel & Mess Management System (DA2 Database Implementation)
 
-**Student Name:** Garvit Kaushik, Arnav Jain, Mridul Gupta
-
+**Student Name:** Garvit Kaushik, Arnav Jain, Mridul Gupta  
 **Registration Number:** 25BCE5689, 25BCE5504, 25BCE5636  
 **Course:** Database Management Systems (DA2)  
-**Database Engines Supported:** MySQL 8.0+ / High-Fidelity Engine + **Neo4j 5.x/AuraDB (Graph Intelligence)**  
+**Database Engines Supported:** MySQL 8.0+ / High-Fidelity Engine + **FalkorDB (Low-Latency Graph Intelligence)**  
 
 ---
 
@@ -23,55 +22,84 @@ To run and immediately launch the system:
 ## 📁 Project Architecture
 
 ```
-da2/
+Hostel-and-mess-management/
 ├── backend/
 │   ├── routes/
-│   │   ├── students.js       # CRUD API for Students
-│   │   ├── rooms.js          # Room inventory & AllocateRoom procedure API
-│   │   ├── mess.js           # Mess subscriptions, payments & menus API
-│   │   ├── complaints.js     # Grievances filing & facility association API
-│   │   ├── queries.js        # SQL & PL/SQL Query Console execution engine
-│   │   └── graph.js          # [NEW] Neo4j Graph Intelligence REST API
+│   │   ├── students.js          # CRUD API for Students
+│   │   ├── rooms.js             # Room inventory & AllocateRoom procedure API
+│   │   ├── mess.js              # Mess subscriptions, payments & menus API
+│   │   ├── complaints.js        # Grievances filing & facility association API
+│   │   ├── queries.js           # SQL & PL/SQL Query Console execution engine
+│   │   └── graph.js             # FalkorDB Graph Intelligence REST API (13 endpoints)
 │   ├── scripts/
-│   │   ├── setup-neo4j-schema.js # [NEW] Applies 10 uniqueness constraints to Neo4j
-│   │   ├── sync-neo4j.js         # [NEW] Idempotent MySQL-to-Neo4j ETL pipeline
-│   │   └── test-graph.js         # [NEW] Automated 9-point integration test runner
-│   ├── neo4j.js              # [NEW] Managed Neo4j driver, sessions, and safe typing
-│   ├── db.js                 # Dual-mode engine (MySQL 8.0 + High-Fidelity Fallback)
-│   ├── package.json          # Node dependencies (express, cors, mysql2, neo4j-driver, dotenv)
-│   ├── server.js             # Express web server & static frontend host
-│   └── .env                  # MySQL and Neo4j configuration settings
+│   │   ├── setup-falkordb-schema.js # Creates 15 indexes & uniqueness constraints in FalkorDB
+│   │   ├── sync-falkordb.js         # Idempotent MySQL-to-FalkorDB ETL pipeline
+│   │   └── test-graph.js            # Automated 44-assertion verification & regression test suite
+│   ├── falkordb.js              # Managed FalkorDB connection pool, safe typing & circuit-breaker
+│   ├── graph-utils.js           # Canonical graph IDs and Cytoscape payload integrity validation
+│   ├── db.js                    # Dual-mode engine (MySQL 8.0 + High-Fidelity Fallback)
+│   ├── package.json             # Node dependencies (express, cors, mysql2, falkordb, dotenv)
+│   ├── server.js                # Express web server & static frontend host
+│   └── .env                     # MySQL and FalkorDB configuration settings
 ├── database/
-│   ├── init.sql              # Complete DDL, 17 tables, triggers, views, procedures, sample data
-│   ├── migration_neo4j_facility_complaint.sql # [NEW] Backward-compatible facility foreign keys
-│   ├── neo4j_schema.cypher   # [NEW] Neo4j constraint definitions & Cypher schema
-│   └── queries.sql           # 16 system-specific SQL & PL/SQL queries with explanations
+│   ├── init.sql                 # Complete DDL, 17 tables, triggers, views, procedures, sample data
+│   ├── migration_neo4j_facility_complaint.sql # Facility foreign keys for spatial grievance attribution
+│   ├── falkordb_schema.cypher   # FalkorDB Cypher index definitions & property model
+│   └── queries.sql              # 16 system-specific SQL & PL/SQL queries with explanations
 ├── docs/
-│   └── NEO4J_IMPLEMENTATION_REPORT.md # [NEW] Comprehensive 11-section coursework report
+│   ├── FALKORDB_IMPLEMENTATION_REPORT.md # Comprehensive 11-section migration report
+│   ├── FALKORDB_SETUP.md                 # Docker container & local environment setup guide
+│   └── FALKORDB_VIVA_GUIDE.md            # High-yield oral exam & viva voce preparation
 ├── frontend/
 │   ├── assets/
-│   │   ├── cytoscape.min.js  # [NEW] Offline vendored Cytoscape.js v3.30.0 graph visualizer
-│   │   ├── style.css         # Modern dark-mode UI design system, glassmorphism & graph styling
-│   │   └── script.js         # Reactive UI logic, REST API connectors, Cytoscape controller
-│   └── portal.html           # Main web application dashboard with Hostel Intelligence tab
+│   │   ├── cytoscape.min.js     # Offline vendored Cytoscape.js v3.30.0 graph visualizer
+│   │   ├── style.css            # Dark-mode UI design system, glassmorphism & graph styling
+│   │   └── script.js            # Reactive UI logic, REST API connectors, Cytoscape controller
+│   └── portal.html              # Main web application dashboard with Hostel Intelligence tab
+├── docker-compose.yml           # FalkorDB container definition with persistent storage volume
 └── run/
-    ├── RUN.bat               # Master click-to-run launcher (starts backend & opens browser)
-    ├── START_BACKEND.bat     # Launches backend console window for log monitoring
-    ├── OPEN_DASHBOARD.bat    # Opens http://localhost:4000 directly
+    ├── RUN.bat                  # Master click-to-run launcher (starts backend & opens browser)
+    ├── START_BACKEND.bat        # Launches backend console window for log monitoring
+    ├── OPEN_DASHBOARD.bat       # Opens http://localhost:4000 directly
     ├── SETUP_MYSQL_DATABASE.bat # Imports init.sql into MySQL Server
-    └── README.txt            # Quick guide for evaluators
+    └── README.txt               # Quick guide for evaluators
 ```
 
 ---
 
-## 🌐 Hostel Intelligence — Powered by Neo4j
+## 🌐 Hostel Intelligence — Powered by FalkorDB
 
-The application features a hybrid architecture combining the ACID transactional strengths of **MySQL 8.0** with the multi-hop relationship traversal powers of **Neo4j Graph Database**.
+The application features a hybrid dual-engine architecture combining the ACID transactional guarantees of **MySQL 8.0** with the low-latency, linear-algebra-accelerated graph traversal capabilities of **FalkorDB**.
+
+```
++-----------------------------------------------------------------------------------+
+|                            HOSTELHUB FRONTEND (Web UI)                            |
+|             (Cytoscape.js Visualizer, Overview Counters, Filter Panels)            |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          | HTTP REST API (/api/graph/*)
+                                          v
++-----------------------------------------------------------------------------------+
+|                        EXPRESS.JS BACKEND SERVICE LAYER                           |
+|       (routes/graph.js, graph-utils.js, circuit-breaker middleware ensureFalkorDB)  |
++-----------------------------------------------------------------------------------+
+           |                                                       |
+           | Cypher Queries (Redis Protocol :6379)                 | Authoritative Read/Write
+           v                                                       v
++------------------------------------+           +----------------------------------+
+|             FALKORDB               |           |              MYSQL               |
+|      (Graph Intelligence Engine)   |           | (Authoritative System of Record) |
+|  - Roommate Finder                 |           |  - Students, Rooms, Allocations  |
+|  - Grievance Hotspot Clustering    |  <-----   |  - Mess Subscriptions, Fees      |
+|  - Spatial Hierarchy Traversal     |   ETL     |  - PL/SQL Stored Procedures      |
+|  - In-Memory GraphBLAS Acceleration|   Sync    |  - ACID Transactional Validation |
++------------------------------------+           +----------------------------------+
+```
 
 ### 1. The 5 Core Graph Intelligence Features
 1. **Roommate Relationship Explorer:**
    - Evaluates active living relationships `(Student)-[:ALLOCATED_TO]->(Room)<-[:ALLOCATED_TO]-(Roommate)` in $O(k)$ graph traversal time without recursive SQL joins.
-   - Self-exclusion guarantee: Searched student is never listed as their own roommate.
+   - **Self-exclusion guarantee:** Searched student is never listed as their own roommate (`WHERE roommate.student_id <> s.student_id`).
    - Includes temporal history analysis detecting overlapping academic terms.
 2. **Grievance Hotspot Detection:**
    - Aggregates recurring and open complaints grouped by explicit physical facility (`Room`, `Mess`, `Hostel`).
@@ -83,45 +111,57 @@ The application features a hybrid architecture combining the ACID transactional 
    - Multi-party exploration linking `(Mess)` to contracted `(Caterer)`, subscribed `(Student)` memberships, and connected dining grievances.
 5. **Interactive Relationship Graph (Cytoscape.js):**
    - Offline-ready interactive network canvas rendered with **Cytoscape.js v3.30.0** (zero external CDN reliance).
-   - Features physics-based layout, color-coded node taxonomy, interactive 1-hop neighborhood highlighting, pan/zoom controls, and real-time node inspector sidebar.
+   - Features CoSE physics-based layout, color-coded node taxonomy, interactive 1-hop neighborhood highlighting, pan/zoom controls, and real-time node inspector sidebar.
 
-### 2. Neo4j Environment Configuration
-Create or edit `backend/.env`:
+### 2. FalkorDB Docker Setup
+FalkorDB runs as a lightweight Docker container over the Redis protocol (port 6379):
+```bash
+# Launch FalkorDB with persistent data volume:
+docker compose up -d
+
+# Verify container health:
+docker ps --filter "name=hostelhub-falkordb"
+```
+
+### 3. FalkorDB Environment Configuration
+Create or verify `backend/.env`:
 ```env
 # MySQL Configuration
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_mysql_password
+# DB_PASSWORD=your_mysql_password
 DB_NAME=hostel_mess_management
 PORT=4000
 
-# Neo4j Graph Database Configuration (Local or AuraDB)
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USERNAME=neo4j
-NEO4J_PASSWORD=your_neo4j_password
-NEO4J_DATABASE=neo4j
+# FalkorDB Graph Database Configuration
+FALKORDB_HOST=localhost
+FALKORDB_PORT=6379
+# FALKORDB_PASSWORD=
+FALKORDB_GRAPH_NAME=hostel_hub
 ```
 
-### 3. Neo4j CLI Commands
+### 4. FalkorDB CLI Commands
 From the `backend/` directory:
-- **Set up Schema & Constraints:**
+- **Set up Schema & Indexes:**
   ```bash
-  npm run neo4j:schema
+  npm run falkordb:schema
   ```
 - **Run Idempotent ETL Synchronization:**
   ```bash
-  npm run neo4j:sync
+  npm run falkordb:sync
   ```
-- **Run Graph Integration Test Suite:**
+- **Run Graph Integration Test Suite (44 tests):**
   ```bash
-  npm run neo4j:test
+  npm test
+  # or
+  npm run falkordb:test
   ```
 
 ---
 
 ## 📊 Database Specifications & Schema
 
-The database `hostel_mess_management` consists of **17 relational tables**:
+The authoritative relational database `hostel_mess_management` consists of **17 relational tables**:
 1. **Student**: Core student master records with registration numbers, branches, years, and parent contacts.
 2. **Hostel**: Residential facilities (Boys & Girls blocks) and warden contacts.
 3. **Block**: Architectural blocks associated with each hostel.
@@ -195,11 +235,12 @@ The database `hostel_mess_management` consists of **17 relational tables**:
 - **Mess & Dining**: Multi-mess facility viewer, registration switches via `RegisterMess`, fee payment recorder, and rotational menu explorer.
 - **Grievance Desk**: Full lifecycle tracking (Pending -> In Progress -> Resolved), status updates, linked facility selector, and deletion.
 - **Query Console**: Interactive test runner for all 16 queries showing SQL code, copy button, live execution benchmark (ms), row counts, and formatted tabular output.
-- **Hostel Intelligence [Neo4j]**: 6 sub-tabs featuring Overview, Roommate Explorer, Grievance Hotspots, Smart Vacancy, Mess Connections, and Interactive Cytoscape Graph Explorer.
+- **Hostel Intelligence [FalkorDB]**: 6 sub-tabs featuring Overview, Roommate Explorer, Grievance Hotspots, Smart Vacancy, Mess Connections, and Interactive Cytoscape Graph Explorer.
 
 ---
 
 ## 📄 Evaluation Documentation
-For in-depth analysis, Cypher query documentation, Mermaid diagrams, and academic comparison:
-👉 Read [`docs/NEO4J_IMPLEMENTATION_REPORT.md`](docs/NEO4J_IMPLEMENTATION_REPORT.md)
-
+For comprehensive technical documentation, Cypher query analysis, and academic comparison:
+- 📖 [FalkorDB Implementation Report](docs/FALKORDB_IMPLEMENTATION_REPORT.md) — 11-section in-depth report on the FalkorDB migration, GraphBLAS linear algebra engine, schema definitions, and benchmarks.
+- ⚙️ [FalkorDB Setup Guide](docs/FALKORDB_SETUP.md) — Step-by-step local container and environment setup instructions.
+- 🎓 [FalkorDB Viva Voce Guide](docs/FALKORDB_VIVA_GUIDE.md) — Comprehensive evaluator Q&A and technical rationale guide.

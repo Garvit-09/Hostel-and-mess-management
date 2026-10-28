@@ -1,15 +1,22 @@
-// sync-neo4j.js – Idempotent ETL Synchronization Pipeline (MySQL/Fallback -> Neo4j)
+// sync-falkordb.js – Idempotent ETL Synchronization Pipeline (MySQL/Fallback -> FalkorDB)
 // Preserves authoritative state, reconciles relationship mutations, and produces verified metrics.
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const pool = require('../db');
-const neo = require('../neo4j');
+const falkor = require('../falkordb');
 const {
   validateMessRegistrationsIntegrity,
   validateRoomAllocationsIntegrity,
   validateComplaintFacilityLinks
 } = require('../graph-utils');
 
-// Extract source tables from MySQL or Fallback Engine
+// ==============================================================================
+// VIVA_FALKORDB_SYNC: AUTHORITATIVE RELATIONAL SOURCE EXTRACTION
+// Purpose: Extracts all 12 core entity tables from MySQL to prepare the in-memory batch for graph projection.
+// Entry point: fetchSourceData()
+// Logic: Executes SELECT * queries across Student, Hostel, Block, Floor, RoomType, Room,
+//        RoomAllocation, Caterer, Mess, MessRegistration, ComplaintType, and Complaint.
+// Output: Unified JavaScript object containing 12 entity arrays.
+// ==============================================================================
 async function fetchSourceData() {
   // If fallback engine is active or getRawData exists
   if (pool.getRawData && (pool.isFallback !== false || !process.env.DB_PASSWORD)) {
@@ -60,21 +67,26 @@ async function fetchSourceData() {
   };
 }
 
-// Master Synchronization Function
+// ==============================================================================
+// VIVA_FALKORDB_SYNC: MASTER IDEMPOTENT ETL SYNCHRONIZATION PIPELINE
+// Purpose: Pushes relational records into FalkorDB using idempotent Cypher MERGE statements,
+//          updating existing nodes and creating missing relationships.
+// Entry point: syncDatabaseToGraph() (run via CLI `npm run falkordb:sync` or POST /api/graph/sync)
+// ==============================================================================
 async function syncDatabaseToGraph() {
   const startTime = Date.now();
   console.log('=======================================================');
-  console.log('STARTING MYSQL -> NEO4J SYNCHRONIZATION PIPELINE');
+  console.log('STARTING MYSQL -> FALKORDB SYNCHRONIZATION PIPELINE');
   console.log('=======================================================');
 
-  const health = await neo.checkHealth();
+  const health = await falkor.checkHealth();
   if (!health.connected) {
-    const errorMsg = `Neo4j is offline or unconfigured (${health.message || health.error}). Please verify backend/.env settings.`;
+    const errorMsg = `FalkorDB is offline or unconfigured (${health.message || health.error}). Please verify backend/.env settings.`;
     console.error(`❌ ${errorMsg}`);
     throw new Error(errorMsg);
   }
 
-  console.log(`Target Graph: ${health.uri} (Database: ${health.database})`);
+  console.log(`Target Graph: ${health.host}:${health.port} (Graph: ${health.graphName})`);
   console.log(`Extracting authoritative data from MySQL / Data Engine...`);
 
   const data = await fetchSourceData();
@@ -97,26 +109,27 @@ async function syncDatabaseToGraph() {
   };
 
   // 1. Hostels
+  const syncedAt = new Date().toISOString();
   if (data.hostels.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS h
       MERGE (hostel:Hostel {hostel_id: h.hostel_id})
       ON CREATE SET hostel.hostel_name = h.hostel_name,
                     hostel.hostel_type = h.hostel_type,
                     hostel.warden_name = h.warden_name,
                     hostel.warden_contact = h.warden_contact,
-                    hostel.synced_at = datetime()
+                    hostel.synced_at = $syncedAt
       ON MATCH SET  hostel.hostel_name = h.hostel_name,
                     hostel.hostel_type = h.hostel_type,
                     hostel.warden_name = h.warden_name,
                     hostel.warden_contact = h.warden_contact,
-                    hostel.synced_at = datetime()
-    `, { items: data.hostels });
+                    hostel.synced_at = $syncedAt
+    `, { items: data.hostels, syncedAt });
   }
 
   // 2. Blocks and Block -> Hostel
   if (data.blocks.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS b
       MERGE (block:Block {block_id: b.block_id})
       ON CREATE SET block.block_name = b.block_name,
@@ -131,7 +144,7 @@ async function syncDatabaseToGraph() {
 
   // 3. Floors and Floor -> Block
   if (data.floors.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS f
       MERGE (floor:Floor {floor_id: f.floor_id})
       ON CREATE SET floor.floor_number = f.floor_number,
@@ -146,7 +159,7 @@ async function syncDatabaseToGraph() {
 
   // 4. RoomTypes
   if (data.roomTypes.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS rt
       MERGE (type:RoomType {room_type_id: rt.room_type_id})
       ON CREATE SET type.capacity = rt.capacity,
@@ -160,7 +173,7 @@ async function syncDatabaseToGraph() {
 
   // 5. Rooms and Room -> Floor & Room -> RoomType
   if (data.rooms.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS r
       MERGE (room:Room {room_id: r.room_id})
       ON CREATE SET room.room_number = r.room_number,
@@ -184,7 +197,7 @@ async function syncDatabaseToGraph() {
 
   // 6. Students
   if (data.students.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS s
       MERGE (st:Student {student_id: s.student_id})
       ON CREATE SET st.reg_no = s.reg_no,
@@ -210,7 +223,7 @@ async function syncDatabaseToGraph() {
   if (data.roomAllocations.length > 0) {
     const { validAllocations } = validateRoomAllocationsIntegrity(data.roomAllocations, data.students, data.rooms);
     if (validAllocations.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS ra
         MATCH (st:Student {student_id: ra.student_id})
         MATCH (r:Room {room_id: ra.room_id})
@@ -227,7 +240,7 @@ async function syncDatabaseToGraph() {
 
   // 8. Caterers
   if (data.caterers.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS cat
       MERGE (c:Caterer {caterer_id: cat.caterer_id})
       ON CREATE SET c.caterer_name = cat.caterer_name,
@@ -246,7 +259,7 @@ async function syncDatabaseToGraph() {
   // 9. Messes & Mess -> Caterer & Mess -> Hostel (Decoupled to ensure 100% node creation)
   if (data.messes.length > 0) {
     // 9a. Create or update ALL Mess nodes first
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS m
       MERGE (mess:Mess {mess_id: m.mess_id})
       ON CREATE SET mess.mess_name = m.mess_name,
@@ -255,20 +268,20 @@ async function syncDatabaseToGraph() {
                     mess.capacity = m.capacity,
                     mess.hostel_id = m.hostel_id,
                     mess.caterer_id = m.caterer_id,
-                    mess.synced_at = datetime()
+                    mess.synced_at = $syncedAt
       ON MATCH SET  mess.mess_name = m.mess_name,
                     mess.mess_category = m.mess_category,
                     mess.monthly_fee = m.monthly_fee,
                     mess.capacity = m.capacity,
                     mess.hostel_id = m.hostel_id,
                     mess.caterer_id = m.caterer_id,
-                    mess.synced_at = datetime()
-    `, { items: data.messes });
+                    mess.synced_at = $syncedAt
+    `, { items: data.messes, syncedAt });
 
     // 9b. Connect Mess -> Caterer where caterer exists
     const messesWithCaterer = data.messes.filter(m => m.caterer_id);
     if (messesWithCaterer.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS m
         MATCH (mess:Mess {mess_id: m.mess_id})
         MATCH (cat:Caterer {caterer_id: m.caterer_id})
@@ -279,7 +292,7 @@ async function syncDatabaseToGraph() {
     // 9c. Connect Mess -> Hostel where hostel exists
     const messesWithHostel = data.messes.filter(m => m.hostel_id);
     if (messesWithHostel.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS m
         MATCH (mess:Mess {mess_id: m.mess_id})
         MATCH (h:Hostel {hostel_id: m.hostel_id})
@@ -297,7 +310,7 @@ async function syncDatabaseToGraph() {
     );
 
     if (validRegistrations.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS mr
         MATCH (st:Student {student_id: mr.student_id})
         MATCH (m:Mess {mess_id: mr.mess_id})
@@ -314,7 +327,7 @@ async function syncDatabaseToGraph() {
 
   // 11. Complaint Types
   if (data.complaintTypes.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS ct
       MERGE (type:ComplaintType {complaint_type_id: ct.complaint_type_id})
       ON CREATE SET type.type_name = ct.type_name,
@@ -326,7 +339,7 @@ async function syncDatabaseToGraph() {
 
   // 12. Complaints & Complaint Relationships
   if (data.complaints.length > 0) {
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS c
       MERGE (comp:Complaint {complaint_id: c.complaint_id})
       ON CREATE SET comp.description = c.description,
@@ -358,7 +371,7 @@ async function syncDatabaseToGraph() {
     `, { items: data.complaints });
 
     // Explicit facility links: Reset existing ASSOCIATED_WITH to prevent obsolete edges upon update
-    await neo.writeQuery(`
+    await falkor.writeQuery(`
       UNWIND $items AS c
       MATCH (comp:Complaint {complaint_id: c.complaint_id})-[r:ASSOCIATED_WITH]->()
       DELETE r
@@ -367,7 +380,7 @@ async function syncDatabaseToGraph() {
     // Link Room if explicitly provided
     const roomComplaints = data.complaints.filter(c => c.room_id != null);
     if (roomComplaints.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS c
         MATCH (comp:Complaint {complaint_id: c.complaint_id})
         MATCH (r:Room {room_id: c.room_id})
@@ -379,7 +392,7 @@ async function syncDatabaseToGraph() {
     // Link Mess if explicitly provided
     const messComplaints = data.complaints.filter(c => c.mess_id != null);
     if (messComplaints.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS c
         MATCH (comp:Complaint {complaint_id: c.complaint_id})
         MATCH (m:Mess {mess_id: c.mess_id})
@@ -391,7 +404,7 @@ async function syncDatabaseToGraph() {
     // Link Hostel if explicitly provided
     const hostelComplaints = data.complaints.filter(c => c.hostel_id != null);
     if (hostelComplaints.length > 0) {
-      await neo.writeQuery(`
+      await falkor.writeQuery(`
         UNWIND $items AS c
         MATCH (comp:Complaint {complaint_id: c.complaint_id})
         MATCH (h:Hostel {hostel_id: c.hostel_id})
@@ -403,7 +416,7 @@ async function syncDatabaseToGraph() {
 
   const durationMs = Date.now() - startTime;
   console.log('=======================================================');
-  console.log(`✅ SYNCHRONIZATION SUCCESSFUL (Completed in ${durationMs}ms)`);
+  console.log(`✅ FALKORDB SYNCHRONIZATION SUCCESSFUL (Completed in ${durationMs}ms)`);
   console.log(`- Nodes Processed: ${stats.students + stats.hostels + stats.blocks + stats.floors + stats.rooms + stats.complaints + stats.messes + stats.caterers}`);
   console.log(`- Active Facility Grievance Links Established: ${stats.facilityLinks}`);
   console.log('=======================================================');
@@ -420,12 +433,12 @@ async function syncDatabaseToGraph() {
 if (require.main === module) {
   syncDatabaseToGraph()
     .then(async () => {
-      await neo.closeDriver();
+      await falkor.closeConnection();
       process.exit(0);
     })
     .catch(async err => {
       console.error('Fatal sync pipeline failure:', err.message);
-      await neo.closeDriver();
+      await falkor.closeConnection();
       process.exit(1);
     });
 }

@@ -3,8 +3,24 @@ const router = express.Router();
 const pool = require('../db');
 
 // List all complaints with student, category, and optional facility info
-router.get('/', async (_, res) => {
+// Supports query filters: ?room_id=X, ?mess_id=Y, ?hostel_id=Z, ?status=Open, ?category=Hostel
+router.get('/', async (req, res) => {
   try {
+    const { room_id, mess_id, hostel_id, status, category } = req.query;
+    const conditions = [];
+    const params = [];
+
+    if (room_id) { conditions.push('c.room_id = ?'); params.push(Number(room_id)); }
+    if (mess_id) { conditions.push('c.mess_id = ?'); params.push(Number(mess_id)); }
+    if (hostel_id) { conditions.push('c.hostel_id = ?'); params.push(Number(hostel_id)); }
+    if (status && status !== 'All') {
+      if (status === 'Open') { conditions.push("c.status IN ('Pending', 'In Progress')"); }
+      else { conditions.push('c.status = ?'); params.push(status); }
+    }
+    if (category && category !== 'All') { conditions.push('ct.category = ?'); params.push(category); }
+
+    const whereClause = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
+
     const [rows] = await pool.query(`
       SELECT c.complaint_id,
              c.student_id,
@@ -12,10 +28,10 @@ router.get('/', async (_, res) => {
              s.full_name,
              ct.type_name,
              ct.category,
-             c.complaint_date,
+             DATE_FORMAT(c.complaint_date, '%Y-%m-%d') AS complaint_date,
              c.description,
              c.status,
-             c.resolved_date,
+             DATE_FORMAT(c.resolved_date, '%Y-%m-%d') AS resolved_date,
              c.remarks,
              c.room_id,
              c.mess_id,
@@ -41,7 +57,8 @@ router.get('/', async (_, res) => {
       LEFT JOIN Room r ON r.room_id = c.room_id
       LEFT JOIN Mess m ON m.mess_id = c.mess_id
       LEFT JOIN Hostel h ON h.hostel_id = c.hostel_id
-      ORDER BY c.complaint_id DESC`);
+      ${whereClause}
+      ORDER BY c.complaint_id DESC`, params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
